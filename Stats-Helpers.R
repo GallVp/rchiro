@@ -374,3 +374,57 @@ standard.cor.test <- function(x, y, standard.interpret = T, interpret.func = sta
 }
 
 
+hedges.g <- function(n1, n2, cohens.d) {
+  Vd <- ((n1+n2)/(n1*n2)) + ((cohens.d^2)/(2*(n1+n2)))
+  
+  df <- n1 + n2 - 2
+  
+  J <- 1-(3/(4*df-1))
+  
+  ges <- cohens.d*J
+  
+  ses <- sqrt((J^2)*Vd)
+  
+  return(list("g" = ges, "g.se" = ses))
+}
+
+example.rma <- function() {
+  n1 <- c(85,
+          50,
+          29,
+          75,
+          219,
+          18)
+
+  n2 <- c(79,
+          51,
+          28,
+          78,
+          219,
+          18)
+
+  d <- c(-0.032673065,
+        0.21942446,
+        0.294432707,
+        0.194900425,
+        0.274426269,
+        -0.142434924)
+
+  calculatedEffs <- hedges.g(n1, n2, d)
+
+  ges <- calculatedEffs$ges
+  ses <- calculatedEffs$ses
+
+  slabs <- c('Bossen-2013',
+            'Chapman-2018',
+            'Lee-2014',
+            'Maddison-2015',
+            'Wong-2020',
+            'Nasseri-2020')
+
+  mdl<-rma(ges, sei = ses, slab = slabs, method = 'FE')
+
+  gg <- forest(mdl, xlab = 'Std. Mean Difference', header='Author-Year', mlab = "Fixed Effects Model for All Studies\nHeterogeneity Test: Q[5]=3.99, p=0.55")
+
+  return(list("mdl" = mdl, "gg" = gg))
+}
