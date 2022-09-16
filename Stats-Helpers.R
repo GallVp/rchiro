@@ -428,3 +428,67 @@ example.rma <- function() {
 
   return(list("mdl" = mdl, "gg" = gg))
 }
+
+Append.within.changes.exp <- function(Input.df, Pre.post.correlation=0.5) {
+  
+  Output.df <- Input.df
+  
+  # Pre-post means and SDs
+  Output.df$Exp.post.minus.pre.mean.calc <- Output.df$Exp.post.mean -  Output.df$Exp.pre.mean
+  Output.df$Exp.post.minus.pre.sd.calc <- sqrt((Output.df$Exp.post.sd)^2 +
+                                                 (Output.df$Exp.pre.sd)^2 -
+                                                 2 * Pre.post.correlation * Output.df$Exp.post.sd * Output.df$Exp.pre.sd)
+  
+  # Pre-post means and SDs selection
+  Output.df$Exp.post.minus.pre.mean.sel <- Output.df$Exp.post.minus.pre.mean
+  Output.df$Exp.post.minus.pre.mean.sel[which(is.na(Output.df$Exp.post.minus.pre.mean.sel))] <- Output.df$Exp.post.minus.pre.mean.calc[which(is.na(Output.df$Exp.post.minus.pre.mean.sel))]
+  
+  Output.df$Exp.post.minus.pre.sd.sel <- Output.df$Exp.post.minus.pre.sd
+  Output.df$Exp.post.minus.pre.sd.sel[which(is.na(Output.df$Exp.post.minus.pre.sd.sel))] <- Output.df$Exp.post.minus.pre.sd.calc[which(is.na(Output.df$Exp.post.minus.pre.sd.sel))]
+  
+  Output.df[Output.df$Increase...Improvement == "No", "Exp.post.minus.pre.mean.sel"] <- Output.df[Output.df$Increase...Improvement == "No", "Exp.post.minus.pre.mean.sel"] * -1.0
+  
+  return(Output.df)
+}
+
+Append.within.changes.ctrl <- function(Input.df, Pre.post.correlation=0.5) {
+  
+  Output.df <- Input.df
+  # Pre-post means and SDs
+  Output.df$Ctrl.post.minus.pre.mean.calc <- Output.df$Ctrl.post.mean -  Output.df$Ctrl.pre.mean
+  Output.df$Ctrl.post.minus.pre.sd.calc <- sqrt((Output.df$Ctrl.post.sd)^2 +
+                                                  (Output.df$Ctrl.pre.sd)^2 -
+                                                  2 * Pre.post.correlation * Output.df$Ctrl.post.sd * Output.df$Ctrl.pre.sd)
+  
+  # Pre-post means and SDs selection
+  Output.df$Ctrl.post.minus.pre.mean.sel <- Output.df$Ctrl.post.minus.pre.mean
+  Output.df$Ctrl.post.minus.pre.mean.sel[which(is.na(Output.df$Ctrl.post.minus.pre.mean.sel))] <- Output.df$Ctrl.post.minus.pre.mean.calc[which(is.na(Output.df$Ctrl.post.minus.pre.mean.sel))]
+  
+  Output.df$Ctrl.post.minus.pre.sd.sel <- Output.df$Ctrl.post.minus.pre.sd
+  Output.df$Ctrl.post.minus.pre.sd.sel[which(is.na(Output.df$Ctrl.post.minus.pre.sd.sel))] <- Output.df$Ctrl.post.minus.pre.sd.calc[which(is.na(Output.df$Ctrl.post.minus.pre.sd.sel))]
+  
+  Output.df[Output.df$Increase...Improvement == "No", "Ctrl.post.minus.pre.mean.sel"] <- Output.df[Output.df$Increase...Improvement == "No", "Ctrl.post.minus.pre.mean.sel"] * -1.0
+  
+  return(Output.df)
+}
+
+Append.between.diffs <- function(Input.df) {
+  
+  Output.df <- Input.df
+  
+  n1 <- Output.df$Exp.post.n
+  n2 <- Output.df$Ctrl.post.n
+  
+  S1 <- Output.df$Exp.post.minus.pre.sd.sel
+  S2 <- Output.df$Ctrl.post.minus.pre.sd.sel
+  
+  Swithin <- sqrt(((n1 - 1)*S1^2 + (n2 - 1)*S2^2) / (n1 + n2 - 2))
+  d <- (Output.df$Exp.post.minus.pre.mean.sel - Output.df$Ctrl.post.minus.pre.mean.sel) / Swithin
+
+  g <- hedges.g(n1, n2, d)
+  
+  Output.df$Hedges.g <- g$g
+  Output.df$Hedges.g.se <- g$g.se
+  
+  return(Output.df)
+}
