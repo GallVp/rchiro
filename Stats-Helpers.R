@@ -291,7 +291,14 @@ standard.p.value <- function(value, sigD = 3) {
 }
 
 standard.em.table <- function(raw.em.table) {
-  aT <- as.data.frame(raw.em.table) %>%
+
+  if("asymp.LCL" %in% names(data.frame(raw.em.table)) || "asymp.LCL" %in% names(data.frame(summary(raw.em.table, infer=c(T, T))))) { 
+    ci.names <- c("asymp.LCL", "asymp.UCL")
+  } else {
+    ci.names <- c("lower.CL", "upper.CL")
+  }
+
+  aT <- data.frame(raw.em.table) %>%
     rowwise %>%
     mutate(sigD = ceiling(log10(1/SE))) %>%
     rowwise %>%
@@ -299,14 +306,16 @@ standard.em.table <- function(raw.em.table) {
                              '±',
                              round(SE, sigD),
                              ' [',
-                             round(lower.CL, sigD),
+                             round(base::get(ci.names[1]), sigD),
                              ', ',
-                             round(upper.CL, sigD), ']'))
+                             round(base::get(ci.names[2]), sigD), ']'))
   aT$emmean <- NULL
   aT$SE <- NULL
   aT$df <- NULL
   aT$lower.CL <- NULL
   aT$upper.CL <- NULL
+  aT$asymp.LCL <- NULL
+  aT$asymp.UCL <- NULL
   aT$sigD <- NULL
   aT <- as.data.frame(aT)
 
@@ -318,7 +327,16 @@ standard.em.table <- function(raw.em.table) {
 }
 
 standard.ctt.table <- function(raw.ctt.table) {
-  aT <- as.data.frame(summary(raw.ctt.table, infer = c(T, T))) %>%
+
+  if("asymp.LCL" %in% names(data.frame(raw.ctt.table)) || "asymp.LCL" %in% names(data.frame(summary(raw.ctt.table, infer=c(T, T))))) { 
+    ci.names <- c("asymp.LCL", "asymp.UCL")
+    stat.names <- c("z.ratio", "z")
+  } else {
+    ci.names <- c("lower.CL", "upper.CL")
+    stat.names <- c("t.ratio", "t")
+  }
+
+  aT <- data.frame(summary(raw.ctt.table, infer = c(T, T))) %>%
     rowwise %>%
     mutate(sigD = ceiling(log10(1/SE))) %>%
     rowwise %>%
@@ -326,22 +344,25 @@ standard.ctt.table <- function(raw.ctt.table) {
                              '±',
                              round(SE, sigD),
                              ' [',
-                             round(lower.CL, sigD),
+                             round(base::get(ci.names[1]), sigD),
                              ', ',
-                             round(upper.CL, sigD), ']'), Test = paste0('t[', round(df, 1), ']', '=', round(t.ratio, 3), ', ', standard.p.value(p.value)))
+                             round(base::get(ci.names[2]), sigD), ']'), Test = paste0(stat.names[2], '[', round(df, 1), ']', '=', round(base::get(stat.names[1]), 3), ', ', standard.p.value(p.value)))
   aT$estimate <- NULL
   aT$SE <- NULL
   aT$df <- NULL
   aT$lower.CL <- NULL
   aT$upper.CL <- NULL
+  aT$asymp.LCL <- NULL
+  aT$asymp.UCL <- NULL
   aT$sigD <- NULL
   aT$t.ratio <- NULL
+  aT$z.ratio <- NULL
   aT$p.value <- NULL
   aT <- as.data.frame(aT)
 
   aT.names <- names(aT)
   aT.names[length(aT.names)-1] <- "Difference±SE [95% CI]"
-  aT.names[length(aT.names)] <- "t[df], p-value"
+  aT.names[length(aT.names)] <- paste0(stat.names[2], "[df], p-value")
   aT.names[1] <- "Contrast"
   names(aT) <- aT.names
 
