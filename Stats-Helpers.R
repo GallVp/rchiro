@@ -245,7 +245,7 @@ Univariate.summary.table <- function(Datasource, exclude.vars, na.rm = FALSE, ro
     
     if(is.factor(Datasource[, var.name])) {
       total <- length(Datasource[, var.name])
-      stats <- as.data.frame(Datasource %>% group_by(.dots = var.name) %>% summarise(N = n(), Percentage = round(n()/total*100, 1)))
+      stats <- as.data.frame(Datasource %>% group_by(base::get(var.name)) %>% summarise(N = n(), Percentage = round(n()/total*100, 1)))
       stats$Mean <- NA
       stats$Median <- NA
       stats$Min <- NA
