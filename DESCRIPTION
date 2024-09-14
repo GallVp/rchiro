@@ -1,0 +1,12 @@
+Package: trialmisc
+Title: A Collection of Functions to Facilitate Analysis of Clinical Trials
+Version: 0.0.1
+Authors@R: 
+    person("Usman", "Rashid", , "Usman.Rashid@nzchiro.co.nz", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-1109-5493"))
+Description: A collection of functions to facilitate analysis of clinical trials
+License: `use_mit_license()`
+    license
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2

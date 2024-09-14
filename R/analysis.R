@@ -1,4 +1,4 @@
-# function for is nan
+#' @export
 is.nan.data.frame <- function(x) {
   do.call(cbind, lapply(x, is.nan))
 }
@@ -91,8 +91,9 @@ overdisp_fun <- function(model) {
 #'
 #' @return a \code{ggplot2} object representing the diagonal plot
 #'
-#' @importFrom ggplot2 aes geom_point scale_color_nejm scale_fill_nejm
+#' @importFrom ggplot2 aes geom_point
 #' @importFrom ggpubr ggarrange ggqqplot gghistogram
+#' @importFrom ggsci scale_color_nejm scale_fill_nejm
 #' @importFrom gridExtra arrangeGrob
 #'
 #' @examples
