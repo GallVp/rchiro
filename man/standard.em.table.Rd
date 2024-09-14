@@ -7,17 +7,22 @@
 standard.em.table(raw.em.table)
 }
 \arguments{
-\item{raw.em.table}{A data frame containing raw estimated marginal means and
+\item{raw.em.table}{A data frame containing raw estimated marginal
+means and
 corresponding standard errors.}
 }
 \value{
-A data frame in a standardized format with estimated means, standard errors,
-and confidence intervals. The confidence intervals are calculated based on the
+A data frame in a standardized format with estimated means,
+standard errors,
+and confidence intervals. The confidence intervals are calculated
+based on the
 \code{ci.names} parameter, which defaults to "lower.CL" and "upper.CL".
 }
 \description{
-This function takes a raw estimated marginal means (EMM) table, calculated using
-a statistical model, and transforms it into a standardized format with estimated
+This function takes a raw estimated marginal means (EMM) table,
+calculated using
+a statistical model, and transforms it into a standardized format
+with estimated
 means, standard errors, and confidence intervals.
 }
 \examples{

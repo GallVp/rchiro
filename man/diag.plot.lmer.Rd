@@ -7,7 +7,8 @@
 diag.plot.lmer(model)
 }
 \arguments{
-\item{model}{a linear mixed effects model created using the \code{lme4} package}
+\item{model}{a linear mixed effects model created using the
+\code{lme4} package}
 }
 \value{
 a \code{ggplot2} object representing the diagonal plot
