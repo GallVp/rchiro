@@ -5,11 +5,12 @@ Authors@R:
     person("Usman", "Rashid", , "Usman.Rashid@nzchiro.co.nz", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1109-5493"))
 Description: A collection of functions to facilitate analysis of clinical trials
-License: `use_mit_license()`
-    license
+License: MIT
+URL: https://gallvp.github.io/trialmisc
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Imports: dplyr, forcats, ggplot2, ggpubr, ggsci, gridExtra, insight, lme4

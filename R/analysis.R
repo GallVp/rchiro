@@ -32,11 +32,6 @@ is.nan.data.frame <- function(x) {
 #' typically created with the `lmer` function from the `lme4` package.
 #' @return A vector of standardized beta coefficients corresponding to the
 #' fixed effects (excluding the intercept) in the model.
-#' @details The standardized beta coefficients are calculated as:
-#' \deqn{\beta^* = \frac{\beta}{\text{SD}(X)} \cdot \text{SD}(Y)}
-#' where \(\beta\) is the unstandardized fixed effect coefficient,
-#' \(\text{SD}(X)\) is the standard deviation of the predictor variables,
-#' and \(\text{SD}(Y)\) is the standard deviation of the outcome variable.
 #' @importFrom lme4 fixef getME
 #' @importFrom stats sd
 #' @examples
@@ -72,13 +67,8 @@ lmer.std.beta <- function(mod) {
 #' @return A matrix of confidence intervals for the specified fixed effects.
 #' Each row corresponds to a fixed effect, with columns representing the lower
 #' and upper bounds of the confidence intervals.
-#' @details The function calculates the confidence intervals as:
-#' \deqn{\hat{\beta} \pm z \cdot \text{SE}(\hat{\beta})}
-#' where \(\hat{\beta}\) is the estimated fixed effect coefficient,
-#' \(\text{SE}(\hat{\beta})\) is the standard error of the coefficient,
-#' and \(z\) is the critical value from the normal distribution for the
-#' specified confidence level.
-#' @importFrom stats fixef vcov qnorm
+#' @importFrom lme4 fixef
+#' @importFrom stats vcov qnorm
 #' @examples
 #' library(rstanarm)
 #' # Fit a linear mixed-effects model
@@ -132,8 +122,8 @@ confint.rlmerMod <- function(object, parm, level = 0.95) {
 #' a new `glm` object with these components and adjusts its attributes to
 #' match the original model's structure.
 #' @importFrom stats gaussian glm.control
-#' @importFrom lme4 fixef vcov
-#' @importFrom effects fixFormula
+#' @importFrom lme4 fixef
+#' @importFrom stats vcov
 #' @examples
 #' library(rstanarm)
 #' # Fit a linear mixed-effects model
@@ -695,135 +685,6 @@ standard.p.value <- function(value, sigD = 3) {
   text
 }
 
-#' Create a standard format table from raw estimated marginal means table
-#'
-#' This function takes a raw estimated marginal means (EMM) table,
-#' calculated using
-#' a statistical model, and transforms it into a standardized format
-#'  with estimated
-#' means, standard errors, and confidence intervals.
-#'
-#' @param raw.em.table A data frame containing raw estimated marginal
-#' means and
-#' corresponding standard errors.
-#'
-#' @return A data frame in a standardized format with estimated means,
-#' standard errors,
-#' and confidence intervals. The confidence intervals are calculated
-#' based on the
-#' \code{ci.names} parameter, which defaults to "lower.CL" and "upper.CL".
-#'
-#' @examples
-#' library(emmeans)
-#' data("airquality")
-#' model <- lm(Ozone ~ WindTemp, data = airquality)
-#' em.table <- emmeans::emmeans(model, ~WindTemp)
-#' standard.em.table(em.table)
-#'
-#' @importFrom dplyr rowwise mutate
-#' @importFrom base round log10 get
-#' @export
-standard.em.table <- function(raw.em.table) {
-  if ("asymp.LCL" %in% names(data.frame(raw.em.table)) ||
-    "asymp.LCL" %in% names(data.frame(summary(raw.em.table, infer = c(T, T))))) {
-    ci.names <- c("asymp.LCL", "asymp.UCL")
-    stat.names <- c("z.ratio", "z")
-  } else {
-    ci.names <- c("lower.CL", "upper.CL")
-    stat.names <- c("t.ratio", "t")
-  }
-
-  aT <- data.frame(raw.em.table) %>%
-    rowwise() %>%
-    mutate(sigD = ceiling(log10(1 / SE))) %>%
-    rowwise() %>%
-    mutate(
-      Estimate = paste0(
-        round(emmean, sigD),
-        "±",
-        round(SE, sigD),
-        " [",
-        round(base::get(ci.names[1]), sigD),
-        ", ",
-        round(base::get(ci.names[2]), sigD), "]"
-      ),
-      Test = paste0(
-        stat.names[2], "[",
-        round(df, 1), "]", "=",
-        round(base::get(stat.names[1]), 3), ", ", standard.p.value(p.value)
-      )
-    )
-
-  aT$emmean <- NULL
-  aT$SE <- NULL
-  aT$df <- NULL
-  aT$lower.CL <- NULL
-  aT$upper.CL <- NULL
-  aT$asymp.LCL <- NULL
-  aT$asymp.UCL <- NULL
-  aT$sigD <- NULL
-  aT$t.ratio <- NULL
-  aT$z.ratio <- NULL
-  aT$p.value <- NULL
-  aT <- as.data.frame(aT)
-
-  aT.names <- names(aT)
-  aT.names[length(aT.names) - 1] <- "Estimate±SE [95% CI]"
-  aT.names[length(aT.names)] <- paste0(stat.names[2], "[df], p-value")
-  names(aT) <- aT.names
-
-  aT
-}
-
-standard.ctt.table <- function(raw.ctt.table) {
-  if ("asymp.LCL" %in% names(data.frame(raw.ctt.table)) ||
-    "asymp.LCL" %in% names(data.frame(summary(raw.ctt.table, infer = c(T, T))))) {
-    ci.names <- c("asymp.LCL", "asymp.UCL")
-    stat.names <- c("z.ratio", "z")
-  } else {
-    ci.names <- c("lower.CL", "upper.CL")
-    stat.names <- c("t.ratio", "t")
-  }
-
-  aT <- data.frame(summary(raw.ctt.table, infer = c(T, T))) %>%
-    rowwise() %>%
-    mutate(sigD = ceiling(log10(1 / SE))) %>%
-    rowwise() %>%
-    mutate(Difference = paste0(
-      round(estimate, sigD),
-      "±",
-      round(SE, sigD),
-      " [",
-      round(base::get(ci.names[1]), sigD),
-      ", ",
-      round(base::get(ci.names[2]), sigD), "]"
-    ), Test = paste0(
-      stat.names[2],
-      "[", round(df, 1), "]", "=",
-      round(base::get(stat.names[1]), 3), ", ", standard.p.value(p.value)
-    ))
-  aT$estimate <- NULL
-  aT$SE <- NULL
-  aT$df <- NULL
-  aT$lower.CL <- NULL
-  aT$upper.CL <- NULL
-  aT$asymp.LCL <- NULL
-  aT$asymp.UCL <- NULL
-  aT$sigD <- NULL
-  aT$t.ratio <- NULL
-  aT$z.ratio <- NULL
-  aT$p.value <- NULL
-  aT <- as.data.frame(aT)
-
-  aT.names <- names(aT)
-  aT.names[length(aT.names) - 1] <- "Difference±SE [95% CI]"
-  aT.names[length(aT.names)] <- paste0(stat.names[2], "[df], p-value")
-  aT.names[1] <- "Contrast"
-  names(aT) <- aT.names
-
-  aT
-}
-
 standard.icc.interpret <- function(r) {
   interpret <- if (r < 0.5) {
     "Poor"
@@ -996,4 +857,105 @@ Append.between.diffs <- function(Input.df) {
   Output.df$Hedges.g.se <- g$g.se
 
   return(Output.df)
+}
+
+standard.ctt.table <- function(raw.ctt.table) {
+  if ("asymp.LCL" %in% names(data.frame(raw.ctt.table)) ||
+    "asymp.LCL" %in% names(data.frame(summary(raw.ctt.table, infer = c(T, T))))) {
+    ci.names <- c("asymp.LCL", "asymp.UCL")
+    stat.names <- c("z.ratio", "z")
+  } else {
+    ci.names <- c("lower.CL", "upper.CL")
+    stat.names <- c("t.ratio", "t")
+  }
+
+  aT <- data.frame(summary(raw.ctt.table, infer = c(T, T))) %>%
+    rowwise() %>%
+    mutate(sigD = ceiling(log10(1 / SE))) %>%
+    rowwise() %>%
+    mutate(Difference = paste0(
+      round(estimate, sigD),
+      "±",
+      round(SE, sigD),
+      " [",
+      round(base::get(ci.names[1]), sigD),
+      ", ",
+      round(base::get(ci.names[2]), sigD), "]"
+    ), Test = paste0(
+      stat.names[2],
+      "[", round(df, 1), "]", "=",
+      round(base::get(stat.names[1]), 3), ", ", standard.p.value(p.value)
+    ))
+  aT$estimate <- NULL
+  aT$SE <- NULL
+  aT$df <- NULL
+  aT$lower.CL <- NULL
+  aT$upper.CL <- NULL
+  aT$asymp.LCL <- NULL
+  aT$asymp.UCL <- NULL
+  aT$sigD <- NULL
+  aT$t.ratio <- NULL
+  aT$z.ratio <- NULL
+  aT$p.value <- NULL
+  aT <- as.data.frame(aT)
+
+  aT.names <- names(aT)
+  aT.names[length(aT.names) - 1] <- "Difference±SE [95% CI]"
+  aT.names[length(aT.names)] <- paste0(stat.names[2], "[df], p-value")
+  aT.names[1] <- "Contrast"
+  names(aT) <- aT.names
+
+  aT
+}
+
+standard.em.table <- function(raw.em.table) {
+  if ("asymp.LCL" %in% names(data.frame(raw.em.table)) ||
+    "asymp.LCL" %in% names(data.frame(summary(raw.em.table, infer = c(T, T))))) {
+    ci.names <- c("asymp.LCL", "asymp.UCL")
+    stat.names <- c("z.ratio", "z")
+  } else {
+    ci.names <- c("lower.CL", "upper.CL")
+    stat.names <- c("t.ratio", "t")
+  }
+
+  aT <- data.frame(raw.em.table) %>%
+    rowwise() %>%
+    mutate(sigD = ceiling(log10(1 / SE))) %>%
+    rowwise() %>%
+    mutate(
+      Estimate = paste0(
+        round(emmean, sigD),
+        "±",
+        round(SE, sigD),
+        " [",
+        round(base::get(ci.names[1]), sigD),
+        ", ",
+        round(base::get(ci.names[2]), sigD), "]"
+      ),
+      Test = paste0(
+        stat.names[2], "[",
+        round(df, 1), "]", "=",
+        round(base::get(stat.names[1]), 3), ", ", standard.p.value(p.value)
+      )
+    )
+
+  aT$emmean <- NULL
+  aT$SE <- NULL
+  aT$df <- NULL
+  aT$lower.CL <- NULL
+  aT$upper.CL <- NULL
+  aT$asymp.LCL <- NULL
+  aT$asymp.UCL <- NULL
+  aT$sigD <- NULL
+  aT$t.ratio <- NULL
+  aT$z.ratio <- NULL
+  aT$p.value <- NULL
+  aT <- as.data.frame(aT)
+
+  aT.names <- names(aT)
+  aT.names[length(aT.names) - 1] <- "Estimate±SE [95% CI]"
+  aT.names[length(aT.names)] <- paste0(stat.names[2], "[df], p-value")
+  names(aT) <- aT.names
+
+  aT
 }

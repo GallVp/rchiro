@@ -4,7 +4,7 @@
 \alias{confint.rlmerMod}
 \title{Compute Confidence Intervals for Fixed Effects in a Linear Mixed Model}
 \usage{
-confint.rlmerMod(object, parm, level = 0.95)
+\method{confint}{rlmerMod}(object, parm, level = 0.95)
 }
 \arguments{
 \item{object}{A fitted linear mixed-effects model object of class
@@ -28,14 +28,6 @@ This function calculates confidence intervals for the fixed effects of a
 fitted linear mixed-effects model (of class \code{rlmerMod}). The intervals are
 computed based on the estimated coefficients and their standard errors using
 a normal distribution.
-}
-\details{
-The function calculates the confidence intervals as:
-\deqn{\hat{\beta} \pm z \cdot \text{SE}(\hat{\beta})}
-where \(\hat{\beta}\) is the estimated fixed effect coefficient,
-\(\text{SE}(\hat{\beta})\) is the standard error of the coefficient,
-and \(z\) is the critical value from the normal distribution for the
-specified confidence level.
 }
 \examples{
 library(rstanarm)

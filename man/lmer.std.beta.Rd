@@ -21,13 +21,6 @@ Standardized beta coefficients are obtained by scaling the fixed effects
 coefficients by the standard deviations of the predictor variables and
 the outcome variable.
 }
-\details{
-The standardized beta coefficients are calculated as:
-\deqn{\beta^* = \frac{\beta}{\text{SD}(X)} \cdot \text{SD}(Y)}
-where \(\beta\) is the unstandardized fixed effect coefficient,
-\(\text{SD}(X)\) is the standard deviation of the predictor variables,
-and \(\text{SD}(Y)\) is the standard deviation of the outcome variable.
-}
 \examples{
 library(lme4)
 # Fit a linear mixed-effects model
