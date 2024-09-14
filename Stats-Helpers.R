@@ -1,24 +1,28 @@
 # function for is nan
-is.nan.data.frame <- function(x)
+is.nan.data.frame <- function(x) {
   do.call(cbind, lapply(x, is.nan))
-  
+}
+
 lmer.std.beta <- function(mod) {
-   b <- fixef(mod)[-1]
-   sd.x <- apply(getME(mod,"X")[,-1],2,sd)
-   sd.y <- sd(getME(mod,"y"))
-   b*sd.x/sd.y
+  b <- fixef(mod)[-1]
+  sd.x <- apply(getME(mod, "X")[, -1], 2, sd)
+  sd.y <- sd(getME(mod, "y"))
+  b * sd.x / sd.y
 }
 
 confint.rlmerMod <- function(object, parm, level = 0.95) {
   beta <- fixef(object)
-  if (missing(parm))
+  if (missing(parm)) {
     parm <- names(beta)
+  }
   se <- sqrt(diag(vcov(object)))
   z <- qnorm((1 + level) / 2)
   ctab <- cbind(beta - z * se, beta + z * se)
-  colnames(ctab) <- stats:::format.perc(c((1 - level) / 2, (1 + level) /
-                                            2),
-                                        digits = 3)
+  colnames(ctab) <- stats:::format.perc(
+    c((1 - level) / 2, (1 + level) /
+        2),
+    digits = 3
+  )
   return(ctab[parm, ])
 }
 
@@ -53,7 +57,7 @@ rlmerMod.to.glm <- function(mod) {
   mod2$fitted.values <- mod2$family$linkinv(mod2$linear.predictors)
   mod2$weights <-
     as.vector(with(mod2, prior.weights * (
-      family$mu.eta(linear.predictors) ^ 2 / family$variance(fitted.values)
+      family$mu.eta(linear.predictors)^2 / family$variance(fitted.values)
     )))
   mod2$residuals <-
     with(mod2, prior.weights * (y - fitted.values) / weights)
@@ -65,7 +69,7 @@ rlmerMod.to.glm <- function(mod) {
 overdisp_fun <- function(model) {
   rdf <- df.residual(model)
   rp <- residuals(model, type = "pearson")
-  Pearson.chisq <- sum(rp ^ 2)
+  Pearson.chisq <- sum(rp^2)
   prat <- Pearson.chisq / rdf
   pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
   c(
@@ -76,34 +80,84 @@ overdisp_fun <- function(model) {
   )
 }
 
+#' Diagonal plot for linear mixed effects models
+#'
+#' This function creates a diagonal plot for a linear mixed effects model using
+#' the \code{ggplot2} package. The plot includes a scatterplot of the residuals
+#' versus the fitted values, a Q-Q plot of the residuals, and a histogram of the
+#' residuals.
+#'
+#' @param model a linear mixed effects model created using the \code{lme4} package
+#'
+#' @return a \code{ggplot2} object representing the diagonal plot
+#'
+#' @importFrom ggplot2 aes geom_point scale_color_nejm scale_fill_nejm
+#' @importFrom ggpubr ggarrange ggqqplot gghistogram
+#' @importFrom gridExtra arrangeGrob
+#'
+#' @examples
+#' model <- lmer(Sepal.Length ~ Sepal.Width + (1 | Species), data = iris)
+#' diag.plot.lmer(model)
+#'
+#' @export
 diag.plot.lmer <- function(model) {
+  # Get fitted values and residuals
   fitted.vals <- fitted(model)
   resid.vals <- resid(model)
+  
+  # Create data frame for plotting
   data.f <- data.frame(fitted.vals, resid.vals)
+  
+  # Create scatter plot of fitted values and residuals
   g1 <-
-    ggplot(data.f, aes(x = fitted.vals, y = resid.vals)) + geom_point() + scale_color_nejm() + scale_fill_nejm() + theme_minimal() + theme(
+    ggplot(data.f, aes(x = fitted.vals, y = resid.vals)) +
+    geom_point() +
+    scale_color_nejm() +
+    scale_fill_nejm() +
+    theme_minimal() +
+    theme(
       panel.grid.major.x = element_blank(),
       panel.grid.minor = element_blank(),
       panel.background = element_blank(),
       axis.line = element_line(colour = "black"),
       legend.position = "none"
-    ) + xlab('Fitted values') + ylab('Residuals')
+    ) +
+    xlab("Fitted values") +
+    ylab("Residuals")
+  
+  # Create QQ-plot of residuals
   g2 <-
-    ggqqplot(resid(model)) + scale_color_nejm() + scale_fill_nejm() + theme_minimal() + theme(
+    ggqqplot(resid(model)) +
+    scale_color_nejm() +
+    scale_fill_nejm() +
+    theme_minimal() +
+    theme(
       panel.grid.major.x = element_blank(),
       panel.grid.minor = element_blank(),
       panel.background = element_blank(),
       axis.line = element_line(colour = "black"),
       legend.position = "none"
-    ) + xlab('Theoretical') + ylab('Residuals')
+    ) +
+    xlab("Theoretical") +
+    ylab("Residuals")
+  
+  # Create histogram of residuals
   g3 <-
-    gghistogram(resid(model), bins = 10) + scale_color_nejm() + scale_fill_nejm() + theme_minimal() + theme(
+    gghistogram(resid(model), bins = 10) +
+    scale_color_nejm() +
+    scale_fill_nejm() +
+    theme_minimal() +
+    theme(
       panel.grid.major.x = element_blank(),
       panel.grid.minor = element_blank(),
       panel.background = element_blank(),
       axis.line = element_line(colour = "black"),
       legend.position = "none"
-    ) + xlab('Residuals') + ylab('Count')
+    ) +
+    xlab("Residuals") +
+    ylab("Count")
+  
+  # Arrange plots into a grid
   figure <-
     ggarrange(
       g1,
@@ -118,6 +172,8 @@ diag.plot.lmer <- function(model) {
       ncol = 1,
       nrow = 2
     )
+  
+  return(figure)
 }
 
 diag.plot.lme <- function(model) {
@@ -125,13 +181,20 @@ diag.plot.lme <- function(model) {
   resid.vals <- resid(model, type = "pearson")
   data.f <- data.frame(fitted.vals, resid.vals)
   g1 <-
-    ggplot(data.f, aes(x = fitted.vals, y = resid.vals)) + geom_point() + scale_color_nejm() + scale_fill_nejm() + theme_minimal() + theme(
+    ggplot(data.f, aes(x = fitted.vals, y = resid.vals)) +
+    geom_point() +
+    scale_color_nejm() +
+    scale_fill_nejm() +
+    theme_minimal() +
+    theme(
       panel.grid.major.x = element_blank(),
       panel.grid.minor = element_blank(),
       panel.background = element_blank(),
       axis.line = element_line(colour = "black"),
       legend.position = "none"
-    ) + xlab('Fitted values') + ylab('Residuals')
+    ) +
+    xlab("Fitted values") +
+    ylab("Residuals")
   g2 <-
     ggqqplot(resid(model)) + scale_color_nejm() + scale_fill_nejm() + theme_minimal() + theme(
       panel.grid.major.x = element_blank(),
@@ -139,7 +202,7 @@ diag.plot.lme <- function(model) {
       panel.background = element_blank(),
       axis.line = element_line(colour = "black"),
       legend.position = "none"
-    ) + xlab('Theoretical') + ylab('Residuals')
+    ) + xlab("Theoretical") + ylab("Residuals")
   g3 <-
     gghistogram(resid(model), bins = 10) + scale_color_nejm() + scale_fill_nejm() + theme_minimal() + theme(
       panel.grid.major.x = element_blank(),
@@ -147,7 +210,7 @@ diag.plot.lme <- function(model) {
       panel.background = element_blank(),
       axis.line = element_line(colour = "black"),
       legend.position = "none"
-    ) + xlab('Residuals') + ylab('Count')
+    ) + xlab("Residuals") + ylab("Count")
   figure <-
     ggarrange(
       g1,
@@ -166,11 +229,11 @@ diag.plot.lme <- function(model) {
 
 var.table.lmer <- function(model) {
   var <- as.data.frame(unlist(insight::get_variance(model)))
-  var$Variance <-var$`unlist(insight::get_variance(model))`
+  var$Variance <- var$`unlist(insight::get_variance(model))`
   var$`unlist(insight::get_variance(model))` <- NULL
   var$Component <- row.names(var)
   row.names(var) <- NULL
-  var <- var[c(1,2,3), c(2, 1)]
+  var <- var[c(1, 2, 3), c(2, 1)]
   var$Component <- c("Fixed", "Random", "Error")
   
   var.total <- var[var$Component == "Fixed", 2] + var[var$Component == "Random", 2] + var[var$Component == "Error", 2]
@@ -179,31 +242,43 @@ var.table.lmer <- function(model) {
   var$Variance <- round(var$Variance, 4)
   var$Percentage <- round(var$Percentage, 1)
   
-  var$ICC <- var[2, "Variance"] / (var[2, "Variance"] + var[3, "Variance"])*100
-  var[c(2, 3), 'ICC'] <- NA
+  var$ICC <- var[2, "Variance"] / (var[2, "Variance"] + var[3, "Variance"]) * 100
+  var[c(2, 3), "ICC"] <- NA
   
   var$Percentage <- round(var$Percentage, 1)
   var$ICC <- round(var$ICC, 1)
   
-  return (var)
+  return(var)
 }
 
-make.factor <- function(Data.vector, levels, labels) {
+make.factor <- function(Data.vector, levels, labels, explicit.na=TRUE) {
   Result.vector <- as.factor(Data.vector)
   Result.vector <- factor(Result.vector, levels = levels, labels = labels)
-  Result.vector <- fct_explicit_na(Result.vector, na_level = "Missing")
+  
+  if(explicit.na == TRUE) {
+    Result.vector <- fct_na_value_to_level(Result.vector, level = "Missing")
+  }
+  Result.vector <- droplevels(Result.vector)
 }
 
 present.factor <- function(Datasource, var.name) {
-  gg <- ggplot(Datasource, aes(x = Datasource[, var.name])) + geom_bar() + scale_color_nejm() + scale_fill_nejm() + theme_minimal() + theme(
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank(),
-    axis.line = element_line(colour = "black"),
-    legend.position = "none") + xlab(var.name) + ylab('N')
+  gg <- ggplot(Datasource, aes(x = Datasource[, var.name])) +
+    geom_bar() +
+    scale_color_nejm() +
+    scale_fill_nejm() +
+    theme_minimal() +
+    theme(
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      axis.line = element_line(colour = "black"),
+      legend.position = "none"
+    ) +
+    xlab(var.name) +
+    ylab("N")
   
   total <- length(Datasource[, var.name])
-  stats <- as.data.frame(Datasource %>% group_by(.dots = var.name) %>% summarise(N = n(), Percentage = round(n()/total*100, 1)))
+  stats <- as.data.frame(Datasource %>% group_by(.dots = var.name) %>% summarise(N = n(), Percentage = round(n() / total * 100, 1)))
   
   return(list(graph = gg, table = stats))
 }
@@ -214,20 +289,23 @@ present.continuous <- function(Datasource, var.name, na.rm = FALSE) {
     panel.grid.minor = element_blank(),
     panel.background = element_blank(),
     axis.line = element_line(colour = "black"),
-    legend.position = "none") + xlab(var.name) + ylab('N')
+    legend.position = "none"
+  ) + xlab(var.name) + ylab("N")
   gQQ <- ggqqplot(Datasource[, var.name]) + scale_color_nejm() + scale_fill_nejm() + theme_minimal() + theme(
     panel.grid.major.x = element_blank(),
     panel.grid.minor = element_blank(),
     panel.background = element_blank(),
     axis.line = element_line(colour = "black"),
-    legend.position = "none")
+    legend.position = "none"
+  )
   
   gBP <- ggboxplot(Datasource[, var.name]) + coord_flip() + scale_color_nejm() + scale_fill_nejm() + theme_minimal() + theme(
     panel.grid.major.x = element_blank(),
     panel.grid.minor = element_blank(),
     panel.background = element_blank(),
     axis.line = element_line(colour = "black"),
-    legend.position = "none") + xlab('') + ylab(var.name)
+    legend.position = "none"
+  ) + xlab("") + ylab(var.name)
   
   gg <- ggarrange(ggarrange(gHist, gQQ, nrow = 1, ncol = 2), gBP, nrow = 2, ncol = 1)
   
@@ -238,14 +316,13 @@ present.continuous <- function(Datasource, var.name, na.rm = FALSE) {
 Univariate.summary.table <- function(Datasource, exclude.vars, na.rm = FALSE, round.to = 1) {
   stats.table <- data.frame(list(Variable = NA, Category = NA, N = NA, Percentage = NA, Mean = NA, Median = NA, Min = NA, Max = NA, SD = NA, IQR = NA))
   for (var.name in names(Datasource)) {
-    
-    if(sum(exclude.vars == var.name) > 0) {
+    if (sum(exclude.vars == var.name) > 0) {
       next
     }
     
-    if(is.factor(Datasource[, var.name])) {
+    if (is.factor(Datasource[, var.name])) {
       total <- length(Datasource[, var.name])
-      stats <- as.data.frame(Datasource %>% group_by(base::get(var.name)) %>% summarise(N = n(), Percentage = round(n()/total*100, 1)))
+      stats <- as.data.frame(Datasource %>% group_by(base::get(var.name)) %>% summarise(N = n(), Percentage = round(n() / total * 100, 1)))
       stats$Mean <- NA
       stats$Median <- NA
       stats$Min <- NA
@@ -274,41 +351,87 @@ Univariate.summary.table <- function(Datasource, exclude.vars, na.rm = FALSE, ro
 }
 
 Plot.factor.vs.factor <- function(Datasource, factor.name.x, factor.name.y) {
-  gg<- ggplot(Datasource, aes(x = Datasource[, factor.name.x], y = Datasource[, factor.name.y])) + geom_jitter(width = 0.2, height = 0.2) +
-    scale_color_nejm() + scale_fill_nejm() + theme_minimal() + theme(
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank(),
-    axis.line = element_line(colour = "black"),
-    legend.position = "none") + xlab(factor.name.x) + ylab(factor.name.y)
+  gg <- ggplot(Datasource, aes(x = Datasource[, factor.name.x], y = Datasource[, factor.name.y])) +
+    geom_jitter(width = 0.2, height = 0.2) +
+    scale_color_nejm() +
+    scale_fill_nejm() +
+    theme_minimal() +
+    theme(
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      axis.line = element_line(colour = "black"),
+      legend.position = "none"
+    ) +
+    xlab(factor.name.x) +
+    ylab(factor.name.y)
   
   return(gg)
 }
 
 standard.p.value <- function(value, sigD = 3) {
-  text <- if(value < 10^(-sigD)) {paste0("<", 10^(-sigD))} else {round(value, sigD)}
+  text <- if (value < 10^(-sigD)) {
+    paste0("<", 10^(-sigD))
+  } else {
+    round(value, sigD)
+  }
   text
 }
 
+#' Create a standard format table from raw estimated marginal means table
+#'
+#' This function takes a raw estimated marginal means (EMM) table, calculated using
+#' a statistical model, and transforms it into a standardized format with estimated
+#' means, standard errors, and confidence intervals.
+#'
+#' @param raw.em.table A data frame containing raw estimated marginal means and
+#' corresponding standard errors.
+#'
+#' @return A data frame in a standardized format with estimated means, standard errors,
+#' and confidence intervals. The confidence intervals are calculated based on the
+#' \code{ci.names} parameter, which defaults to "lower.CL" and "upper.CL".
+#'
+#' @examples
+#' library(emmeans)
+#' data("airquality")
+#' model <- lm(Ozone ~ WindTemp, data = airquality)
+#' em.table <- emmeans::emmeans(model, ~WindTemp)
+#' standard.em.table(em.table)
+#'
+#' @importFrom dplyr rowwise mutate
+#' @importFrom base round log10 get
+#' @export
 standard.em.table <- function(raw.em.table) {
-
-  if("asymp.LCL" %in% names(data.frame(raw.em.table)) || "asymp.LCL" %in% names(data.frame(summary(raw.em.table, infer=c(T, T))))) { 
+  if ("asymp.LCL" %in% names(data.frame(raw.em.table)) ||
+      "asymp.LCL" %in% names(data.frame(summary(raw.em.table, infer = c(T, T))))) {
     ci.names <- c("asymp.LCL", "asymp.UCL")
+    stat.names <- c("z.ratio", "z")
   } else {
     ci.names <- c("lower.CL", "upper.CL")
+    stat.names <- c("t.ratio", "t")
   }
-
+  
   aT <- data.frame(raw.em.table) %>%
-    rowwise %>%
-    mutate(sigD = ceiling(log10(1/SE))) %>%
-    rowwise %>%
-    mutate(Estimate = paste0(round(emmean, sigD),
-                             '±',
-                             round(SE, sigD),
-                             ' [',
-                             round(base::get(ci.names[1]), sigD),
-                             ', ',
-                             round(base::get(ci.names[2]), sigD), ']'))
+    rowwise() %>%
+    mutate(sigD = ceiling(log10(1 / SE))) %>%
+    rowwise() %>%
+    mutate(
+      Estimate = paste0(
+        round(emmean, sigD),
+        "±",
+        round(SE, sigD),
+        " [",
+        round(base::get(ci.names[1]), sigD),
+        ", ",
+        round(base::get(ci.names[2]), sigD), "]"
+      ),
+      Test = paste0(
+        stat.names[2], "[",
+        round(df, 1), "]", "=",
+        round(base::get(stat.names[1]), 3), ", ", standard.p.value(p.value)
+      )
+    )
+  
   aT$emmean <- NULL
   aT$SE <- NULL
   aT$df <- NULL
@@ -317,36 +440,46 @@ standard.em.table <- function(raw.em.table) {
   aT$asymp.LCL <- NULL
   aT$asymp.UCL <- NULL
   aT$sigD <- NULL
+  aT$t.ratio <- NULL
+  aT$z.ratio <- NULL
+  aT$p.value <- NULL
   aT <- as.data.frame(aT)
-
+  
   aT.names <- names(aT)
-  aT.names[length(aT.names)] <- "Estimate±SE [95% CI]"
+  aT.names[length(aT.names) - 1] <- "Estimate±SE [95% CI]"
+  aT.names[length(aT.names)] <- paste0(stat.names[2], "[df], p-value")
   names(aT) <- aT.names
-
+  
   aT
 }
 
 standard.ctt.table <- function(raw.ctt.table) {
-
-  if("asymp.LCL" %in% names(data.frame(raw.ctt.table)) || "asymp.LCL" %in% names(data.frame(summary(raw.ctt.table, infer=c(T, T))))) { 
+  if ("asymp.LCL" %in% names(data.frame(raw.ctt.table)) ||
+      "asymp.LCL" %in% names(data.frame(summary(raw.ctt.table, infer = c(T, T))))) {
     ci.names <- c("asymp.LCL", "asymp.UCL")
     stat.names <- c("z.ratio", "z")
   } else {
     ci.names <- c("lower.CL", "upper.CL")
     stat.names <- c("t.ratio", "t")
   }
-
+  
   aT <- data.frame(summary(raw.ctt.table, infer = c(T, T))) %>%
-    rowwise %>%
-    mutate(sigD = ceiling(log10(1/SE))) %>%
-    rowwise %>%
-    mutate(Difference = paste0(round(estimate, sigD),
-                             '±',
-                             round(SE, sigD),
-                             ' [',
-                             round(base::get(ci.names[1]), sigD),
-                             ', ',
-                             round(base::get(ci.names[2]), sigD), ']'), Test = paste0(stat.names[2], '[', round(df, 1), ']', '=', round(base::get(stat.names[1]), 3), ', ', standard.p.value(p.value)))
+    rowwise() %>%
+    mutate(sigD = ceiling(log10(1 / SE))) %>%
+    rowwise() %>%
+    mutate(Difference = paste0(
+      round(estimate, sigD),
+      "±",
+      round(SE, sigD),
+      " [",
+      round(base::get(ci.names[1]), sigD),
+      ", ",
+      round(base::get(ci.names[2]), sigD), "]"
+    ), Test = paste0(
+      stat.names[2],
+      "[", round(df, 1), "]", "=",
+      round(base::get(stat.names[1]), 3), ", ", standard.p.value(p.value)
+    ))
   aT$estimate <- NULL
   aT$SE <- NULL
   aT$df <- NULL
@@ -359,103 +492,134 @@ standard.ctt.table <- function(raw.ctt.table) {
   aT$z.ratio <- NULL
   aT$p.value <- NULL
   aT <- as.data.frame(aT)
-
+  
   aT.names <- names(aT)
-  aT.names[length(aT.names)-1] <- "Difference±SE [95% CI]"
+  aT.names[length(aT.names) - 1] <- "Difference±SE [95% CI]"
   aT.names[length(aT.names)] <- paste0(stat.names[2], "[df], p-value")
   aT.names[1] <- "Contrast"
   names(aT) <- aT.names
-
+  
   aT
 }
 
 standard.icc.interpret <- function(r) {
-  interpret <- if(r < 0.5) { "Poor" } else{ if(r < 0.75) { "Moderate" }
-    else { if(r < 0.9) { "Good" } else { "Excellent" } } }
-
+  interpret <- if (r < 0.5) {
+    "Poor"
+  } else {
+    if (r < 0.75) {
+      "Moderate"
+    } else {
+      if (r < 0.9) {
+        "Good"
+      } else {
+        "Excellent"
+      }
+    }
+  }
+  
   return(interpret)
 }
 
 standard.convergence.interpret <- function(r) {
-  interpret <- if(r < 0.3) { "Poor" } else{ if(r < 0.6) { "Adequate" }
-    else { "Excellent" } }
-
+  interpret <- if (r < 0.3) {
+    "Poor"
+  } else {
+    if (r < 0.6) {
+      "Adequate"
+    } else {
+      "Excellent"
+    }
+  }
+  
   return(interpret)
 }
 
 standard.cor.test <- function(x, y, standard.interpret = T, interpret.func = standard.icc.interpret) {
   result <- cor.test(x, y)
-  interpret.str <- if(standard.interpret == T) {standard.icc.interpret(result$conf.int[1])} else {standard.icc.interpret(result$estimate)}
-  result.str <- paste0('r=', round(result$estimate, 2),
-  ' 95% CI [', round(result$conf.int[1], 2), ', ', round(result$conf.int[2], 2), ']',
-  ' t[', result$parameter, ']=', round(result$statistic[[1]], 2),
-  ', p=', standard.p.value(result$p.value, sigD = 3))
-
-  return(paste0(result.str, ', ', interpret.str))
+  interpret.str <- if (standard.interpret == T) {
+    standard.icc.interpret(result$conf.int[1])
+  } else {
+    standard.icc.interpret(result$estimate)
+  }
+  result.str <- paste0(
+    "r=", round(result$estimate, 2),
+    " 95% CI [", round(result$conf.int[1], 2), ", ", round(result$conf.int[2], 2), "]",
+    " t[", result$parameter, "]=", round(result$statistic[[1]], 2),
+    ", p=", standard.p.value(result$p.value, sigD = 3)
+  )
+  
+  return(paste0(result.str, ", ", interpret.str))
 }
 
 
 hedges.g <- function(n1, n2, cohens.d) {
-  Vd <- ((n1+n2)/(n1*n2)) + ((cohens.d^2)/(2*(n1+n2)))
+  Vd <- ((n1 + n2) / (n1 * n2)) + ((cohens.d^2) / (2 * (n1 + n2)))
   
   df <- n1 + n2 - 2
   
-  J <- 1-(3/(4*df-1))
+  J <- 1 - (3 / (4 * df - 1))
   
-  ges <- cohens.d*J
+  ges <- cohens.d * J
   
-  ses <- sqrt((J^2)*Vd)
+  ses <- sqrt((J^2) * Vd)
   
   return(list("g" = ges, "g.se" = ses))
 }
 
 example.rma <- function() {
-  n1 <- c(85,
-          50,
-          29,
-          75,
-          219,
-          18)
-
-  n2 <- c(79,
-          51,
-          28,
-          78,
-          219,
-          18)
-
-  d <- c(-0.032673065,
-        0.21942446,
-        0.294432707,
-        0.194900425,
-        0.274426269,
-        -0.142434924)
-
+  n1 <- c(
+    85,
+    50,
+    29,
+    75,
+    219,
+    18
+  )
+  
+  n2 <- c(
+    79,
+    51,
+    28,
+    78,
+    219,
+    18
+  )
+  
+  d <- c(
+    -0.032673065,
+    0.21942446,
+    0.294432707,
+    0.194900425,
+    0.274426269,
+    -0.142434924
+  )
+  
   calculatedEffs <- hedges.g(n1, n2, d)
-
+  
   ges <- calculatedEffs$ges
   ses <- calculatedEffs$ses
-
-  slabs <- c('Bossen-2013',
-            'Chapman-2018',
-            'Lee-2014',
-            'Maddison-2015',
-            'Wong-2020',
-            'Nasseri-2020')
-
-  mdl<-rma(ges, sei = ses, slab = slabs, method = 'FE')
-
-  gg <- forest(mdl, xlab = 'Std. Mean Difference', header='Author-Year', mlab = "Fixed Effects Model for All Studies\nHeterogeneity Test: Q[5]=3.99, p=0.55")
-
+  
+  slabs <- c(
+    "Bossen-2013",
+    "Chapman-2018",
+    "Lee-2014",
+    "Maddison-2015",
+    "Wong-2020",
+    "Nasseri-2020"
+  )
+  
+  mdl <- rma(ges, sei = ses, slab = slabs, method = "FE")
+  
+  gg <- forest(mdl, xlab = "Std. Mean Difference", header = "Author-Year", mlab = "Fixed Effects Model for All Studies\nHeterogeneity Test: Q[5]=3.99, p=0.55")
+  
   return(list("mdl" = mdl, "gg" = gg))
 }
 
-Append.within.changes.exp <- function(Input.df, Pre.post.correlation=0.5) {
-  
+Append.within.changes.exp <- function(Input.df, Pre.post.correlation = 0.5) {
   Output.df <- Input.df
   
   # Pre-post means and SDs
-  Output.df$Exp.post.minus.pre.mean.calc <- Output.df$Exp.post.mean -  Output.df$Exp.pre.mean
+  Output.df$Exp.post.minus.pre.mean.calc <- Output.df$Exp.post.mean - Output.df$Exp.pre.mean
   Output.df$Exp.post.minus.pre.sd.calc <- sqrt((Output.df$Exp.post.sd)^2 +
                                                  (Output.df$Exp.pre.sd)^2 -
                                                  2 * Pre.post.correlation * Output.df$Exp.post.sd * Output.df$Exp.pre.sd)
@@ -472,11 +636,10 @@ Append.within.changes.exp <- function(Input.df, Pre.post.correlation=0.5) {
   return(Output.df)
 }
 
-Append.within.changes.ctrl <- function(Input.df, Pre.post.correlation=0.5) {
-  
+Append.within.changes.ctrl <- function(Input.df, Pre.post.correlation = 0.5) {
   Output.df <- Input.df
   # Pre-post means and SDs
-  Output.df$Ctrl.post.minus.pre.mean.calc <- Output.df$Ctrl.post.mean -  Output.df$Ctrl.pre.mean
+  Output.df$Ctrl.post.minus.pre.mean.calc <- Output.df$Ctrl.post.mean - Output.df$Ctrl.pre.mean
   Output.df$Ctrl.post.minus.pre.sd.calc <- sqrt((Output.df$Ctrl.post.sd)^2 +
                                                   (Output.df$Ctrl.pre.sd)^2 -
                                                   2 * Pre.post.correlation * Output.df$Ctrl.post.sd * Output.df$Ctrl.pre.sd)
@@ -494,7 +657,6 @@ Append.within.changes.ctrl <- function(Input.df, Pre.post.correlation=0.5) {
 }
 
 Append.between.diffs <- function(Input.df) {
-  
   Output.df <- Input.df
   
   n1 <- Output.df$Exp.post.n
@@ -503,9 +665,9 @@ Append.between.diffs <- function(Input.df) {
   S1 <- Output.df$Exp.post.minus.pre.sd.sel
   S2 <- Output.df$Ctrl.post.minus.pre.sd.sel
   
-  Swithin <- sqrt(((n1 - 1)*S1^2 + (n2 - 1)*S2^2) / (n1 + n2 - 2))
+  Swithin <- sqrt(((n1 - 1) * S1^2 + (n2 - 1) * S2^2) / (n1 + n2 - 2))
   d <- (Output.df$Exp.post.minus.pre.mean.sel - Output.df$Ctrl.post.minus.pre.mean.sel) / Swithin
-
+  
   g <- hedges.g(n1, n2, d)
   
   Output.df$Hedges.g <- g$g
