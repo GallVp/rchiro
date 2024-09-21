@@ -132,3 +132,102 @@ confint.rlmerMod <- function(mod, parm, level = 0.95) {
   )
   return(ctab[parm, ])
 }
+
+#' Diagonal plot for linear mixed effects models
+#'
+#' This function creates a diagonal plot for a linear mixed effects model using
+#' the \code{ggplot2} package. The plot includes a scatterplot of the residuals
+#' versus the fitted values, a Q-Q plot of the residuals, and a histogram of the
+#' residuals.
+#'
+#' @param model a linear mixed effects model created using the
+#' \code{lme4} package
+#'
+#' @return a \code{ggplot2} object representing the diagonal plot
+#'
+#' @importFrom stats fitted resid
+#' @importFrom ggplot2 aes geom_point
+#' @importFrom ggpubr ggarrange ggqqplot gghistogram
+#' @importFrom ggsci scale_color_nejm scale_fill_nejm
+#'
+#' @examples
+#' library(lme4)
+#' model <- lmer(Sepal.Length ~ Sepal.Width + (1 | Species), data = iris)
+#' diag.plot.lmer(model)
+#'
+#' @export
+diag.plot.lmer <- function(model) {
+  # Get fitted values and residuals
+  fitted.vals <- stats::fitted(model)
+  resid.vals <- stats::resid(model)
+
+  # Create data frame for plotting
+  data.f <- data.frame(fitted.vals, resid.vals)
+
+  # Create scatter plot of fitted values and residuals
+  g1 <-
+    ggplot2::ggplot(data.f, ggplot2::aes(x = fitted.vals, y = resid.vals)) +
+    ggplot2::geom_point() +
+    ggsci::scale_color_nejm() +
+    ggsci::scale_fill_nejm() +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+      panel.grid.major.x = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank(),
+      panel.background = ggplot2::element_blank(),
+      axis.line = ggplot2::element_line(colour = "black"),
+      legend.position = "none"
+    ) +
+    ggplot2::xlab("Fitted values") +
+    ggplot2::ylab("Residuals")
+
+  # Create QQ-plot of residuals
+  g2 <-
+    ggpubr::ggqqplot(resid(model)) +
+    ggsci::scale_color_nejm() +
+    ggsci::scale_fill_nejm() +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+      panel.grid.major.x = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank(),
+      panel.background = ggplot2::element_blank(),
+      axis.line = ggplot2::element_line(colour = "black"),
+      legend.position = "none"
+    ) +
+    ggplot2::xlab("Theoretical") +
+    ggplot2::ylab("Residuals")
+
+  # Create histogram of residuals
+  g3 <-
+    ggpubr::gghistogram(resid(model), bins = 10) +
+    ggsci::scale_color_nejm() +
+    ggsci::scale_fill_nejm() +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
+      panel.grid.major.x = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank(),
+      panel.background = ggplot2::element_blank(),
+      axis.line = ggplot2::element_line(colour = "black"),
+      legend.position = "none"
+    ) +
+    ggplot2::xlab("Residuals") +
+    ggplot2::ylab("Count")
+
+  # Arrange plots into a grid
+  figure <-
+    ggpubr::ggarrange(
+      g1,
+      ggpubr::ggarrange(
+        g2,
+        g3,
+        labels = c("B", "C"),
+        ncol = 2,
+        nrow = 1
+      ),
+      labels = c("A"),
+      ncol = 1,
+      nrow = 2
+    )
+
+  return(figure)
+}
