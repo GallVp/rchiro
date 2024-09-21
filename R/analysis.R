@@ -84,3 +84,51 @@ lmer.std.beta <- function(mod) {
   sd.y <- sd(lme4::getME(mod, "y"))
   b * sd.x / sd.y
 }
+
+#' Compute Confidence Intervals for Fixed Effects in a Linear Mixed Model
+#'
+#' This function calculates confidence intervals for the fixed effects of a
+#' fitted linear mixed-effects model (of class `rlmerMod`). The intervals are
+#' computed based on the estimated coefficients and their standard errors using
+#' a normal distribution.
+#'
+#' @param mod A fitted linear mixed-effects model object of class
+#' `rlmerMod`. This is typically created using the `rlmer` function from
+#' the `robustlmm` package.
+#' @param parm A character vector specifying which parameters (fixed effects)
+#' to compute confidence intervals for. If missing, confidence intervals for
+#' all fixed effects are computed.
+#' @param level A numeric value between 0 and 1 indicating the confidence
+#' level for the intervals. The default is 0.95 for 95% confidence intervals.
+#' @return A matrix of confidence intervals for the specified fixed effects.
+#' Each row corresponds to a fixed effect, with columns representing the lower
+#' and upper bounds of the confidence intervals.
+#' @importFrom lme4 fixef
+#' @importFrom stats vcov qnorm
+#' @importFrom Matrix diag
+#'
+#' @examples
+#' library(robustlmm)
+#' # Fit a linear mixed-effects model
+#' mod <- rlmer(Reaction ~ Days + (Days | Subject), data = sleepstudy)
+#' # Compute 95% confidence intervals for all fixed effects
+#' confint(mod)
+#' # Compute 99% confidence intervals for specific parameters
+#' confint(mod, parm = "Days", level = 0.99)
+#'
+#' @export
+confint.rlmerMod <- function(mod, parm, level = 0.95) {
+  beta <- lme4::fixef(mod)
+  if (missing(parm)) {
+    parm <- names(beta)
+  }
+  se <- sqrt(Matrix::diag(stats::vcov(mod)))
+  z <- stats::qnorm((1 + level) / 2)
+  ctab <- cbind(beta - z * se, beta + z * se)
+  colnames(ctab) <- complmrob:::format.perc(
+    c((1 - level) / 2, (1 + level) /
+      2),
+    digits = 3
+  )
+  return(ctab[parm, ])
+}
