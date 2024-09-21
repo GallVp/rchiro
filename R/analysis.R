@@ -323,3 +323,96 @@ standard.ctt.table <- function(raw.ctt.table) {
 
   aT
 }
+
+#' Standardize an Estimated Marginal Means (EMM) Table
+#'
+#' This function standardizes a table of estimated marginal means (EMMs)
+#' from model summary statistics. It reformats the EMM estimates,
+#' standard errors, confidence intervals, and test statistics into a
+#' human-readable format.
+#'
+#' @param raw.em.table A table of estimated marginal means from a model summary,
+#'   typically containing columns for EMM estimates, standard errors, confidence
+#'   intervals, and test statistics. The function will detect if the table
+#'   contains asymptotic or regular confidence limits.
+#'
+#' @return A standardized data frame containing:
+#'   \describe{
+#'     \item{Estimate±SE [95% CI]}{Formatted estimates with standard errors
+#'     and 95% confidence intervals.}
+#'     \item{Test}{Formatted test statistic (either `t` or `z` statistic),
+#'     degrees of freedom, and p-value.}
+#'   }
+#'
+#' @details
+#' This function checks whether the input table includes asymptotic or regular
+#' confidence limits (`asymp.LCL`/`asymp.UCL` or `lower.CL`/`upper.CL`) and
+#' whether it should use `z.ratio` or `t.ratio` for the test statistic.
+#' It processes the raw table and returns a user-friendly summary with
+#' formatted estimates and test statistics.
+#'
+#' @examples
+#'
+#' library(emmeans)
+#' model <- lm(Sepal.Length ~ Sepal.Width + Species, data = iris)
+#' contrast_table <- emmeans(model, ~Species)
+#' result <- standard.em.table(contrast_table)
+#' print(result)
+#'
+#' @importFrom dplyr rowwise mutate
+#' @export
+standard.em.table <- function(raw.em.table) {
+  if ("asymp.LCL" %in% names(data.frame(raw.em.table)) ||
+    "asymp.LCL" %in% names(
+      data.frame(summary(raw.em.table, infer = c(T, T)))
+    )
+  ) {
+    ci.names <- c("asymp.LCL", "asymp.UCL")
+    stat.names <- c("z.ratio", "z")
+  } else {
+    ci.names <- c("lower.CL", "upper.CL")
+    stat.names <- c("t.ratio", "t")
+  }
+
+  aT <- data.frame(summary(raw.em.table, infer = c(T, T))) |>
+    dplyr::rowwise() |>
+    dplyr::mutate(sigD = ceiling(log10(1 / SE))) |>
+    dplyr::rowwise() |>
+    dplyr::mutate(
+      Estimate = paste0(
+        round(emmean, sigD),
+        "±",
+        round(SE, sigD),
+        " [",
+        round(base::get(ci.names[1]), sigD),
+        ", ",
+        round(base::get(ci.names[2]), sigD), "]"
+      ),
+      Test = paste0(
+        stat.names[2], "[",
+        round(df, 1), "]", "=",
+        round(base::get(stat.names[1]), 3), ", ",
+        rchiro::standard.p.value(p.value)
+      )
+    )
+
+  aT$emmean <- NULL
+  aT$SE <- NULL
+  aT$df <- NULL
+  aT$lower.CL <- NULL
+  aT$upper.CL <- NULL
+  aT$asymp.LCL <- NULL
+  aT$asymp.UCL <- NULL
+  aT$sigD <- NULL
+  aT$t.ratio <- NULL
+  aT$z.ratio <- NULL
+  aT$p.value <- NULL
+  aT <- as.data.frame(aT)
+
+  aT.names <- names(aT)
+  aT.names[length(aT.names) - 1] <- "Estimate±SE [95% CI]"
+  aT.names[length(aT.names)] <- paste0(stat.names[2], "[df], p-value")
+  names(aT) <- aT.names
+
+  aT
+}
