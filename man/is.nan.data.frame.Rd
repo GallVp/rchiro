@@ -20,10 +20,6 @@ the corresponding element in the data frame is NaN, and \code{FALSE} otherwise.
 }
 \examples{
 df <- data.frame(a = c(1, NaN, 3), b = c(NaN, 2, NaN))
-is.nan.data.frame(df)
-# Returns:
-#      a     b
-# FALSE  TRUE
-# TRUE  FALSE
-# FALSE  TRUE
+is.nan(df)
+
 }

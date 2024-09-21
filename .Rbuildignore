@@ -1,2 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^.vscode$
+^docs$
+^_pkgdown.ym

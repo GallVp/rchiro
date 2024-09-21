@@ -16,10 +16,10 @@ Default is 3.}
 A character string representing the formatted p-value.
 }
 \description{
-This function formats a p-value to a standardized number of significant digits.
-If the p-value is smaller than the threshold (10^(-sigD)), it is returned as
-"<0.001" (or another appropriate threshold based on \code{sigD}), otherwise, it is
-rounded to the specified number of significant digits.
+This function formats a p-value to a standardized number of significant
+digits. If the p-value is smaller than the threshold (10^(-sigD)), it is
+returned as "<0.001" (or another appropriate threshold based on \code{sigD}),
+otherwise, it is rounded to the specified number of significant digits.
 }
 \details{
 The function takes a p-value and checks if it is smaller than a certain
@@ -29,10 +29,8 @@ the threshold. Otherwise, the p-value is returned rounded to the specified
 number of significant digits.
 }
 \examples{
-\dontrun{
 standard.p.value(0.0005) # "<0.001"
 standard.p.value(0.12345) # "0.123"
 standard.p.value(0.0001, 4) # "<0.0001"
-}
 
 }

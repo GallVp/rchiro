@@ -1,16 +1,16 @@
-Package: trialmisc
-Title: A Collection of Functions to Facilitate Analysis of Clinical Trials
+Package: rchiro
+Title: Collection of R Functions for Statistical Analysis of Chiropractic Clinical Studies
 Version: 0.0.1
 Authors@R: 
     person("Usman", "Rashid", , "Usman.Rashid@nzchiro.co.nz", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1109-5493"))
-Description: A collection of functions to facilitate analysis of clinical trials
-License: MIT
-URL: https://gallvp.github.io/trialmisc
+Description: Collection of R functions for statistical analysis of chiropractic clinical studies.
+License: MIT + file LICENSE
+URL: https://gallvp.github.io/rchiro
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-Imports: dplyr, forcats, ggplot2, ggpubr, ggsci, gridExtra, insight, lme4
+Imports: lme4

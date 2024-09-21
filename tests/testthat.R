@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(trialmisc)
+library(rchiro)
 
-test_check("trialmisc")
+test_check("rchiro")
