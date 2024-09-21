@@ -231,3 +231,95 @@ diag.plot.lmer <- function(model) {
 
   return(figure)
 }
+
+#' Standardize a Contrast Table
+#'
+#' This function standardizes a contrast table from model summary statistics,
+#' including the estimates, standard errors, confidence intervals,
+#' and test statistics. It adjusts column names and formats the results for
+#' easy interpretation, providing concise representations of the differences
+#' and test results.
+#'
+#' @param raw.ctt.table A contrast table from a model summary, typically
+#'   containing columns for estimates, standard errors, confidence intervals,
+#'   and test statistics. This object can either contain asymptotic or
+#'   confidence limits, which the function will detect and handle accordingly.
+#'
+#' @return A standardized data frame containing:
+#'   \describe{
+#'     \item{Contrast}{The name of the contrast tested.}
+#'     \item{Difference±SE [95% CI]}{Formatted difference estimates with
+#'     standard error and confidence intervals.}
+#'     \item{Test}{Formatted test statistic (either `t` or `z` statistic),
+#'     degrees of freedom, and p-value.}
+#'   }
+#'
+#' @details
+#' The function checks if the input table contains asymptotic or
+#' regular confidence limits (`asymp.LCL`/`asymp.UCL` or `lower.CL`/`upper.CL`).
+#' It also detects whether to use `z.ratio` or `t.ratio` for the test statistic.
+#' The final table provides a concise summary of the contrasts, including
+#' estimates, standard errors, confidence intervals, test statistics,
+#' and p-values, all in a human-readable format.
+#'
+#' @examples
+#' library(emmeans)
+#' model <- lm(Sepal.Length ~ Sepal.Width + Species, data = iris)
+#' contrast_table <- emmeans(model, pairwise ~ Species)$contrasts
+#' result <- standard.ctt.table(contrast_table)
+#' print(result)
+#'
+#' @importFrom dplyr rowwise mutate
+#' @export
+standard.ctt.table <- function(raw.ctt.table) {
+  if ("asymp.LCL" %in% names(data.frame(raw.ctt.table)) ||
+    "asymp.LCL" %in% names(
+      data.frame(summary(raw.ctt.table, infer = c(T, T)))
+    )
+  ) {
+    ci.names <- c("asymp.LCL", "asymp.UCL")
+    stat.names <- c("z.ratio", "z")
+  } else {
+    ci.names <- c("lower.CL", "upper.CL")
+    stat.names <- c("t.ratio", "t")
+  }
+
+  aT <- data.frame(summary(raw.ctt.table, infer = c(T, T))) |>
+    dplyr::rowwise() |>
+    dplyr::mutate(sigD = ceiling(log10(1 / SE))) |>
+    dplyr::rowwise() |>
+    dplyr::mutate(Difference = paste0(
+      round(estimate, sigD),
+      "±",
+      round(SE, sigD),
+      " [",
+      round(base::get(ci.names[1]), sigD),
+      ", ",
+      round(base::get(ci.names[2]), sigD), "]"
+    ), Test = paste0(
+      stat.names[2],
+      "[", round(df, 1), "]", "=",
+      round(base::get(stat.names[1]), 3), ", ",
+      rchiro::standard.p.value(p.value)
+    ))
+  aT$estimate <- NULL
+  aT$SE <- NULL
+  aT$df <- NULL
+  aT$lower.CL <- NULL
+  aT$upper.CL <- NULL
+  aT$asymp.LCL <- NULL
+  aT$asymp.UCL <- NULL
+  aT$sigD <- NULL
+  aT$t.ratio <- NULL
+  aT$z.ratio <- NULL
+  aT$p.value <- NULL
+  aT <- as.data.frame(aT)
+
+  aT.names <- names(aT)
+  aT.names[length(aT.names) - 1] <- "Difference±SE [95% CI]"
+  aT.names[length(aT.names)] <- paste0(stat.names[2], "[df], p-value")
+  aT.names[1] <- "Contrast"
+  names(aT) <- aT.names
+
+  aT
+}
