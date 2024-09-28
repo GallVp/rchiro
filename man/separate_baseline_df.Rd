@@ -7,7 +7,7 @@
 separate_baseline_df(
   df,
   time_var = "Time",
-  baeline_lvl = "Baseline",
+  baseline_lvl = "Baseline",
   var_name = "Outcome",
   id_vars = c("PartId", "Group")
 )
@@ -17,7 +17,7 @@ separate_baseline_df(
 
 \item{time_var}{A string specifying the name of the time variable (default is "Time").}
 
-\item{baeline_lvl}{A string specifying the baseline level (default is "Baseline").}
+\item{baseline_lvl}{A string specifying the baseline level (default is "Baseline").}
 
 \item{var_name}{A string specifying the name of the outcome variable (default is "Outcome").}
 

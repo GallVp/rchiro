@@ -16,7 +16,7 @@ confidence limits, which the function will detect and handle accordingly.}
 A standardized data frame containing:
 \describe{
 \item{Contrast}{The name of the contrast tested.}
-\item{Difference±SE \link{95\% CI}}{Formatted difference estimates with
+\item{Difference±SE [95\% CI]}{Formatted difference estimates with
 standard error and confidence intervals.}
 \item{Test}{Formatted test statistic (either \code{t} or \code{z} statistic),
 degrees of freedom, and p-value.}

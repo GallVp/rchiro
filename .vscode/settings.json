@@ -1,5 +1,31 @@
 {
     "editor.rulers": [
         80
+    ],
+    "cSpell.words": [
+        "asymp",
+        "colour",
+        "complmrob",
+        "dplyr",
+        "emmean",
+        "emmeans",
+        "fixef",
+        "ggarrange",
+        "gghistogram",
+        "ggplot",
+        "ggpubr",
+        "ggqqplot",
+        "ggsci",
+        "lmer",
+        "nejm",
+        "perc",
+        "rchiro",
+        "rlmer",
+        "robustlmm",
+        "rowwise",
+        "scatterplot",
+        "sleepstudy",
+        "xlab",
+        "ylab"
     ]
 }

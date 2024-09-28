@@ -15,7 +15,7 @@ contains asymptotic or regular confidence limits.}
 \value{
 A standardized data frame containing:
 \describe{
-\item{Estimate±SE \link{95\% CI}}{Formatted estimates with standard errors
+\item{Estimate±SE [95\% CI]}{Formatted estimates with standard errors
 and 95\% confidence intervals.}
 \item{Test}{Formatted test statistic (either \code{t} or \code{z} statistic),
 degrees of freedom, and p-value.}

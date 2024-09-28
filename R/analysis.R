@@ -124,13 +124,13 @@ confint.rlmerMod <- function(mod, parm, level = 0.95) {
   }
   se <- sqrt(Matrix::diag(stats::vcov(mod)))
   z <- stats::qnorm((1 + level) / 2)
-  ctab <- cbind(beta - z * se, beta + z * se)
-  colnames(ctab) <- complmrob:::format.perc(
+  c_tab <- cbind(beta - z * se, beta + z * se)
+  colnames(c_tab) <- complmrob:::format.perc(
     c((1 - level) / 2, (1 + level) /
       2),
     digits = 3
   )
-  return(ctab[parm, ])
+  return(c_tab[parm, ])
 }
 
 #' Diagonal plot for linear mixed effects models
@@ -158,15 +158,15 @@ confint.rlmerMod <- function(mod, parm, level = 0.95) {
 #' @export
 diag_plot_lmer <- function(model) {
   # Get fitted values and residuals
-  fitted_vals <- stats::fitted(model)
-  resid_vals <- stats::resid(model)
+  fitted_values <- stats::fitted(model)
+  resid_values <- stats::resid(model)
 
   # Create data frame for plotting
-  data.f <- data.frame(fitted_vals, resid_vals)
+  data.f <- data.frame(fitted_values, resid_values)
 
   # Create scatter plot of fitted values and residuals
   g1 <-
-    ggplot2::ggplot(data.f, ggplot2::aes(x = fitted_vals, y = resid_vals)) +
+    ggplot2::ggplot(data.f, ggplot2::aes(x = fitted_values, y = resid_values)) +
     ggplot2::geom_point() +
     ggsci::scale_color_nejm() +
     ggsci::scale_fill_nejm() +
@@ -248,7 +248,7 @@ diag_plot_lmer <- function(model) {
 #' @return A standardized data frame containing:
 #'   \describe{
 #'     \item{Contrast}{The name of the contrast tested.}
-#'     \item{Difference±SE [95% CI]}{Formatted difference estimates with
+#'     \item{Difference±SE \[95% CI\]}{Formatted difference estimates with
 #'     standard error and confidence intervals.}
 #'     \item{Test}{Formatted test statistic (either `t` or `z` statistic),
 #'     degrees of freedom, and p-value.}
@@ -338,7 +338,7 @@ describe_contrasts <- function(raw_contrasts_table) {
 #'
 #' @return A standardized data frame containing:
 #'   \describe{
-#'     \item{Estimate±SE [95% CI]}{Formatted estimates with standard errors
+#'     \item{Estimate±SE \[95% CI\]}{Formatted estimates with standard errors
 #'     and 95% confidence intervals.}
 #'     \item{Test}{Formatted test statistic (either `t` or `z` statistic),
 #'     degrees of freedom, and p-value.}
@@ -463,7 +463,7 @@ columns_of_df_except <- function(df, ex) {
 #'
 #' @param df A data frame containing the data.
 #' @param time_var A string specifying the name of the time variable (default is "Time").
-#' @param baeline_lvl A string specifying the baseline level (default is "Baseline").
+#' @param baseline_lvl A string specifying the baseline level (default is "Baseline").
 #' @param var_name A string specifying the name of the outcome variable (default is "Outcome").
 #' @param id_vars A character vector of identifier variables (default is c("PartId", "Group")).
 #'
@@ -482,17 +482,17 @@ columns_of_df_except <- function(df, ex) {
 
 separate_baseline_df <- function(df,
   time_var="Time",
-  baeline_lvl="Baseline",
+  baseline_lvl="Baseline",
   var_name="Outcome",
   id_vars=c("PartId", "Group")) {
   
   df_long <- df
-  df_long_pre <- subset(df_long, df[,time_var] == baeline_lvl)
+  df_long_pre <- subset(df_long, df[,time_var] == baseline_lvl)
   df_long_pre[, paste0(var_name,"Pre")] <- df_long_pre[, var_name]
   df_long_pre[, var_name] <- NULL
   df_long_pre[, time_var] <- NULL
   
-  df_long_post <- subset(df_long, df[,time_var] != baeline_lvl)
+  df_long_post <- subset(df_long, df[,time_var] != baseline_lvl)
   
   df_long <- df_long_post |>
     merge(
