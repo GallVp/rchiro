@@ -20,34 +20,34 @@ is.nan.data.frame <- function(x) {
 #' Format P-Value with Standardized Precision
 #'
 #' This function formats a p-value to a standardized number of significant
-#' digits. If the p-value is smaller than the threshold (10^(-sigD)), it is
-#' returned as "<0.001" (or another appropriate threshold based on `sigD`),
+#' digits. If the p-value is smaller than the threshold (10^(-sig_digits)), it is
+#' returned as "<0.001" (or another appropriate threshold based on `sig_digits`),
 #' otherwise, it is rounded to the specified number of significant digits.
 #'
 #' @param value A numeric value representing the p-value to be formatted.
-#' @param sigD An integer specifying the number of significant digits to retain.
+#' @param sig_digits An integer specifying the number of significant digits to retain.
 #' Default is 3.
 #'
 #' @return A character string representing the formatted p-value.
 #'
 #' @details
 #' The function takes a p-value and checks if it is smaller than a certain
-#' threshold determined by the `sigD` parameter. If the p-value is smaller than
+#' threshold determined by the `sig_digits` parameter. If the p-value is smaller than
 #' this threshold, it returns a string indicating that the value is smaller than
 #' the threshold. Otherwise, the p-value is returned rounded to the specified
 #' number of significant digits.
 #'
 #' @examples
-#' standard.p.value(0.0005) # "<0.001"
-#' standard.p.value(0.12345) # "0.123"
-#' standard.p.value(0.0001, 4) # "<0.0001"
+#' describe_p_value(0.0005) # "<0.001"
+#' describe_p_value(0.12345) # "0.123"
+#' describe_p_value(0.0001, 4) # "<0.0001"
 #'
 #' @export
-standard.p.value <- function(value, sigD = 3) {
-  text <- if (value < 10^(-sigD)) {
-    paste0("<", 10^(-sigD))
+describe_p_value <- function(value, sig_digits = 3) {
+  text <- if (value < 10^(-sig_digits)) {
+    paste0("<", 10^(-sig_digits))
   } else {
-    round(value, sigD)
+    round(value, sig_digits)
   }
   text
 }
@@ -71,9 +71,9 @@ standard.p.value <- function(value, sigD = 3) {
 #' # Fit a linear mixed-effects model
 #' mod <- lmer(Reaction ~ Days + (Days | Subject), sleepstudy)
 #' # Calculate standardized beta coefficients
-#' lmer.std.beta(mod)
+#' std_beta_lmer(mod)
 #' @export
-lmer.std.beta <- function(mod) {
+std_beta_lmer <- function(mod) {
   b <- lme4::fixef(mod)[-1]
   x.mat <- lme4::getME(mod, "X")[, -1]
   sd.x <- if (is.vector(x.mat)) {
@@ -153,10 +153,10 @@ confint.rlmerMod <- function(mod, parm, level = 0.95) {
 #' @examples
 #' library(lme4)
 #' model <- lmer(Sepal.Length ~ Sepal.Width + (1 | Species), data = iris)
-#' diag.plot.lmer(model)
+#' diag_plot_lmer(model)
 #'
 #' @export
-diag.plot.lmer <- function(model) {
+diag_plot_lmer <- function(model) {
   # Get fitted values and residuals
   fitted.vals <- stats::fitted(model)
   resid.vals <- stats::resid(model)
@@ -240,7 +240,7 @@ diag.plot.lmer <- function(model) {
 #' easy interpretation, providing concise representations of the differences
 #' and test results.
 #'
-#' @param raw.ctt.table A contrast table from a model summary, typically
+#' @param raw_contrasts_table A contrast table from a model summary, typically
 #'   containing columns for estimates, standard errors, confidence intervals,
 #'   and test statistics. This object can either contain asymptotic or
 #'   confidence limits, which the function will detect and handle accordingly.
@@ -266,15 +266,15 @@ diag.plot.lmer <- function(model) {
 #' library(emmeans)
 #' model <- lm(Sepal.Length ~ Sepal.Width + Species, data = iris)
 #' contrast_table <- emmeans(model, pairwise ~ Species)$contrasts
-#' result <- standard.ctt.table(contrast_table)
+#' result <- describe_contrasts(contrast_table)
 #' print(result)
 #'
 #' @importFrom dplyr rowwise mutate
 #' @export
-standard.ctt.table <- function(raw.ctt.table) {
-  if ("asymp.LCL" %in% names(data.frame(raw.ctt.table)) ||
+describe_contrasts <- function(raw_contrasts_table) {
+  if ("asymp.LCL" %in% names(data.frame(raw_contrasts_table)) ||
     "asymp.LCL" %in% names(
-      data.frame(summary(raw.ctt.table, infer = c(T, T)))
+      data.frame(summary(raw_contrasts_table, infer = c(T, T)))
     )
   ) {
     ci.names <- c("asymp.LCL", "asymp.UCL")
@@ -284,7 +284,7 @@ standard.ctt.table <- function(raw.ctt.table) {
     stat.names <- c("t.ratio", "t")
   }
 
-  aT <- data.frame(summary(raw.ctt.table, infer = c(T, T))) |>
+  aT <- data.frame(summary(raw_contrasts_table, infer = c(T, T))) |>
     dplyr::rowwise() |>
     dplyr::mutate(sigD = ceiling(log10(1 / SE))) |>
     dplyr::rowwise() |>
@@ -300,7 +300,7 @@ standard.ctt.table <- function(raw.ctt.table) {
       stat.names[2],
       "[", round(df, 1), "]", "=",
       round(base::get(stat.names[1]), 3), ", ",
-      rchiro::standard.p.value(p.value)
+      rchiro::describe_p_value(p.value)
     ))
   aT$estimate <- NULL
   aT$SE <- NULL
@@ -331,7 +331,7 @@ standard.ctt.table <- function(raw.ctt.table) {
 #' standard errors, confidence intervals, and test statistics into a
 #' human-readable format.
 #'
-#' @param raw.em.table A table of estimated marginal means from a model summary,
+#' @param raw_emmeans_table A table of estimated marginal means from a model summary,
 #'   typically containing columns for EMM estimates, standard errors, confidence
 #'   intervals, and test statistics. The function will detect if the table
 #'   contains asymptotic or regular confidence limits.
@@ -356,15 +356,15 @@ standard.ctt.table <- function(raw.ctt.table) {
 #' library(emmeans)
 #' model <- lm(Sepal.Length ~ Sepal.Width + Species, data = iris)
 #' contrast_table <- emmeans(model, ~Species)
-#' result <- standard.em.table(contrast_table)
+#' result <- describe_emmeans(contrast_table)
 #' print(result)
 #'
 #' @importFrom dplyr rowwise mutate
 #' @export
-standard.em.table <- function(raw.em.table) {
-  if ("asymp.LCL" %in% names(data.frame(raw.em.table)) ||
+describe_emmeans <- function(raw_emmeans_table) {
+  if ("asymp.LCL" %in% names(data.frame(raw_emmeans_table)) ||
     "asymp.LCL" %in% names(
-      data.frame(summary(raw.em.table, infer = c(T, T)))
+      data.frame(summary(raw_emmeans_table, infer = c(T, T)))
     )
   ) {
     ci.names <- c("asymp.LCL", "asymp.UCL")
@@ -374,7 +374,7 @@ standard.em.table <- function(raw.em.table) {
     stat.names <- c("t.ratio", "t")
   }
 
-  aT <- data.frame(summary(raw.em.table, infer = c(T, T))) |>
+  aT <- data.frame(summary(raw_emmeans_table, infer = c(T, T))) |>
     dplyr::rowwise() |>
     dplyr::mutate(sigD = ceiling(log10(1 / SE))) |>
     dplyr::rowwise() |>
@@ -392,7 +392,7 @@ standard.em.table <- function(raw.em.table) {
         stat.names[2], "[",
         round(df, 1), "]", "=",
         round(base::get(stat.names[1]), 3), ", ",
-        rchiro::standard.p.value(p.value)
+        rchiro::describe_p_value(p.value)
       )
     )
 
@@ -428,10 +428,10 @@ standard.em.table <- function(raw.em.table) {
 #' 
 #' @examples
 #' df <- data.frame(a = 1:3, b = 4:6, c = 7:9)
-#' xnames.data.frame(df, c("b", "c"))
+#' names_of_df_except(df, c("b", "c"))
 #'
 #' @export 
-xnames.data.frame <- function(df, ex) {
+names_of_df_except <- function(df, ex) {
   names.all <- base::names(df)
   ex.which <- which(names.all %in% ex)
   
@@ -449,9 +449,9 @@ xnames.data.frame <- function(df, ex) {
 #' 
 #' @examples
 #' df <- data.frame(a = 1:3, b = 4:6, c = 7:9)
-#' columns.data.frame(df, c("b", "c"))
+#' columns_of_df_except(df, c("b", "c"))
 #'
 #' @export 
-columns.data.frame <- function(df, ex) {
-  df[, df |> xnames.data.frame(ex)]
+columns_of_df_except <- function(df, ex) {
+  df[, df |> names_of_df_except(ex)]
 }
