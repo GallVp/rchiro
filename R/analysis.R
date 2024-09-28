@@ -416,3 +416,42 @@ standard.em.table <- function(raw.em.table) {
 
   aT
 }
+
+#' Get Data Frame Column Names Except Specified
+#'
+#' This function returns the column names of a data frame excluding those specified.
+#'
+#' @param df A data frame from which column names will be retrieved.
+#' @param ex A character vector of column names to exclude.
+#'
+#' @return A character vector of column names from the data frame, excluding those in \code{ex}.
+#' 
+#' @examples
+#' df <- data.frame(a = 1:3, b = 4:6, c = 7:9)
+#' xnames.data.frame(df, c("b", "c"))
+#'
+#' @export 
+xnames.data.frame <- function(df, ex) {
+  names.all <- base::names(df)
+  ex.which <- which(names.all %in% ex)
+  
+  names.all[-ex.which]
+}
+
+#' Get Data Frame Columns Except those Specified by Name
+#'
+#' This function returns the columns of a data frame excluding those specified.
+#'
+#' @param df A data frame from which column names will be retrieved.
+#' @param ex A character vector of column names to exclude.
+#'
+#' @return A data frame with columns  excluding those in \code{ex}.
+#' 
+#' @examples
+#' df <- data.frame(a = 1:3, b = 4:6, c = 7:9)
+#' columns.data.frame(df, c("b", "c"))
+#'
+#' @export 
+columns.data.frame <- function(df, ex) {
+  df[, df |> xnames.data.frame(ex)]
+}
