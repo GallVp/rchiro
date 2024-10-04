@@ -126,8 +126,7 @@ confint.rlmerMod <- function(mod, parm, level = 0.95) {
   z <- stats::qnorm((1 + level) / 2)
   c_tab <- cbind(beta - z * se, beta + z * se)
   colnames(c_tab) <- complmrob:::format.perc(
-    c((1 - level) / 2, (1 + level) /
-      2),
+    c((1 - level) / 2, (1 + level) / 2),
     digits = 3
   )
   return(c_tab[parm, ])
@@ -162,11 +161,11 @@ diag_plot_lmer <- function(model) {
   resid_values <- stats::resid(model)
 
   # Create data frame for plotting
-  data.f <- data.frame(fitted_values, resid_values)
+  data_f <- data.frame(fitted_values, resid_values)
 
   # Create scatter plot of fitted values and residuals
   g1 <-
-    ggplot2::ggplot(data.f, ggplot2::aes(x = fitted_values, y = resid_values)) +
+    ggplot2::ggplot(data_f, ggplot2::aes(x = fitted_values, y = resid_values)) +
     ggplot2::geom_point() +
     ggsci::scale_color_nejm() +
     ggsci::scale_fill_nejm() +
@@ -274,7 +273,7 @@ diag_plot_lmer <- function(model) {
 describe_contrasts <- function(raw_contrasts_table) {
   if ("asymp.LCL" %in% names(data.frame(raw_contrasts_table)) ||
     "asymp.LCL" %in% names(
-      data.frame(summary(raw_contrasts_table, infer = c(T, T)))
+      data.frame(summary(raw_contrasts_table, infer = c(TRUE, TRUE)))
     )
   ) {
     ci_names <- c("asymp.LCL", "asymp.UCL")
@@ -284,7 +283,7 @@ describe_contrasts <- function(raw_contrasts_table) {
     stat_names <- c("t.ratio", "t")
   }
 
-  aT <- data.frame(summary(raw_contrasts_table, infer = c(T, T))) |>
+  a_table <- data.frame(summary(raw_contrasts_table, infer = c(TRUE, TRUE))) |>
     dplyr::rowwise() |>
     dplyr::mutate(sig_digits = ceiling(log10(1 / SE))) |>
     dplyr::rowwise() |>
@@ -302,26 +301,26 @@ describe_contrasts <- function(raw_contrasts_table) {
       round(base::get(stat_names[1]), 3), ", ",
       rchiro::describe_p_value(p.value)
     ))
-  aT$estimate <- NULL
-  aT$SE <- NULL
-  aT$df <- NULL
-  aT$lower.CL <- NULL
-  aT$upper.CL <- NULL
-  aT$asymp.LCL <- NULL
-  aT$asymp.UCL <- NULL
-  aT$sig_digits <- NULL
-  aT$t.ratio <- NULL
-  aT$z.ratio <- NULL
-  aT$p.value <- NULL
-  aT <- as.data.frame(aT)
+  a_table$estimate <- NULL
+  a_table$SE <- NULL
+  a_table$df <- NULL
+  a_table$lower.CL <- NULL
+  a_table$upper.CL <- NULL
+  a_table$asymp.LCL <- NULL
+  a_table$asymp.UCL <- NULL
+  a_table$sig_digits <- NULL
+  a_table$t.ratio <- NULL
+  a_table$z.ratio <- NULL
+  a_table$p.value <- NULL
+  a_table <- as.data.frame(a_table)
 
-  aT_names <- names(aT)
-  aT_names[length(aT_names) - 1] <- "Difference±SE [95% CI]"
-  aT_names[length(aT_names)] <- paste0(stat_names[2], "[df], p-value")
-  aT_names[1] <- "Contrast"
-  names(aT) <- aT_names
+  a_table_names <- names(a_table)
+  a_table_names[length(a_table_names) - 1] <- "Difference±SE [95% CI]"
+  a_table_names[length(a_table_names)] <- paste0(stat_names[2], "[df], p-value")
+  a_table_names[1] <- "Contrast"
+  names(a_table) <- a_table_names
 
-  aT
+  a_table
 }
 
 #' Standardize an Estimated Marginal Means (EMM) Table
@@ -364,7 +363,7 @@ describe_contrasts <- function(raw_contrasts_table) {
 describe_emmeans <- function(raw_emmeans_table) {
   if ("asymp.LCL" %in% names(data.frame(raw_emmeans_table)) ||
     "asymp.LCL" %in% names(
-      data.frame(summary(raw_emmeans_table, infer = c(T, T)))
+      data.frame(summary(raw_emmeans_table, infer = c(TRUE, TRUE)))
     )
   ) {
     ci_names <- c("asymp.LCL", "asymp.UCL")
@@ -374,7 +373,7 @@ describe_emmeans <- function(raw_emmeans_table) {
     stat_names <- c("t.ratio", "t")
   }
 
-  aT <- data.frame(summary(raw_emmeans_table, infer = c(T, T))) |>
+  a_table <- data.frame(summary(raw_emmeans_table, infer = c(TRUE, TRUE))) |>
     dplyr::rowwise() |>
     dplyr::mutate(sig_digits = ceiling(log10(1 / SE))) |>
     dplyr::rowwise() |>
@@ -396,25 +395,25 @@ describe_emmeans <- function(raw_emmeans_table) {
       )
     )
 
-  aT$emmean <- NULL
-  aT$SE <- NULL
-  aT$df <- NULL
-  aT$lower.CL <- NULL
-  aT$upper.CL <- NULL
-  aT$asymp.LCL <- NULL
-  aT$asymp.UCL <- NULL
-  aT$sig_digits <- NULL
-  aT$t.ratio <- NULL
-  aT$z.ratio <- NULL
-  aT$p.value <- NULL
-  aT <- as.data.frame(aT)
+  a_table$emmean <- NULL
+  a_table$SE <- NULL
+  a_table$df <- NULL
+  a_table$lower.CL <- NULL
+  a_table$upper.CL <- NULL
+  a_table$asymp.LCL <- NULL
+  a_table$asymp.UCL <- NULL
+  a_table$sig_digits <- NULL
+  a_table$t.ratio <- NULL
+  a_table$z.ratio <- NULL
+  a_table$p.value <- NULL
+  a_table <- as.data.frame(a_table)
 
-  aT_names <- names(aT)
-  aT_names[length(aT_names) - 1] <- "Estimate±SE [95% CI]"
-  aT_names[length(aT_names)] <- paste0(stat_names[2], "[df], p-value")
-  names(aT) <- aT_names
+  a_table_names <- names(a_table)
+  a_table_names[length(a_table_names) - 1] <- "Estimate±SE [95% CI]"
+  a_table_names[length(a_table_names)] <- paste0(stat_names[2], "[df], p-value")
+  names(a_table) <- a_table_names
 
-  aT
+  a_table
 }
 
 #' Get Data Frame Column Names Except Specified
@@ -425,16 +424,16 @@ describe_emmeans <- function(raw_emmeans_table) {
 #' @param ex A character vector of column names to exclude.
 #'
 #' @return A character vector of column names from the data frame, excluding those in \code{ex}.
-#' 
+#'
 #' @examples
 #' df <- data.frame(a = 1:3, b = 4:6, c = 7:9)
 #' names_of_df_except(df, c("b", "c"))
 #'
-#' @export 
+#' @export
 names_of_df_except <- function(df, ex) {
   names_all <- base::names(df)
   ex_which <- which(names_all %in% ex)
-  
+
   names_all[-ex_which]
 }
 
@@ -446,12 +445,12 @@ names_of_df_except <- function(df, ex) {
 #' @param ex A character vector of column names to exclude.
 #'
 #' @return A data frame with columns  excluding those in \code{ex}.
-#' 
+#'
 #' @examples
 #' df <- data.frame(a = 1:3, b = 4:6, c = 7:9)
 #' columns_of_df_except(df, c("b", "c"))
 #'
-#' @export 
+#' @export
 columns_of_df_except <- function(df, ex) {
   df[, df |> names_of_df_except(ex)]
 }
@@ -468,40 +467,41 @@ columns_of_df_except <- function(df, ex) {
 #' @param id_vars A character vector of identifier variables (default is c("PartId", "Group")).
 #'
 #' @return A data frame that includes the non-baseline records and adds a column for the baseline outcome.
-#' 
+#'
 #' @examples
-#' df <- data.frame(PartId = c(1, 1, 2, 2),
-#'                  Group = c("A", "A", "B", "B"),
-#'                  Time = c("Baseline", "Post", "Baseline", "Post"),
-#'                  Outcome = c(10, 12, 20, 22))
-#' 
+#' df <- data.frame(
+#'   PartId = c(1, 1, 2, 2),
+#'   Group = c("A", "A", "B", "B"),
+#'   Time = c("Baseline", "Post", "Baseline", "Post"),
+#'   Outcome = c(10, 12, 20, 22)
+#' )
+#'
 #' result <- separate_baseline_df(df)
 #' print(result)
-#' 
+#'
 #' @export
 
 separate_baseline_df <- function(df,
-  time_var="Time",
-  baseline_lvl="Baseline",
-  var_name="Outcome",
-  id_vars=c("PartId", "Group")) {
-  
+                                 time_var = "Time",
+                                 baseline_lvl = "Baseline",
+                                 var_name = "Outcome",
+                                 id_vars = c("PartId", "Group")) {
   df_long <- df
-  df_long_pre <- subset(df_long, df[,time_var] == baseline_lvl)
-  df_long_pre[, paste0(var_name,"Pre")] <- df_long_pre[, var_name]
+  df_long_pre <- subset(df_long, df[, time_var] == baseline_lvl)
+  df_long_pre[, paste0(var_name, "Pre")] <- df_long_pre[, var_name]
   df_long_pre[, var_name] <- NULL
   df_long_pre[, time_var] <- NULL
-  
-  df_long_post <- subset(df_long, df[,time_var] != baseline_lvl)
-  
+
+  df_long_post <- subset(df_long, df[, time_var] != baseline_lvl)
+
   df_long <- df_long_post |>
     merge(
       df_long_pre,
-      by=id_vars
+      by = id_vars
     )
-  
+
   df_long_pre <- NULL
   df_long_post <- NULL
-  
+
   df_long
 }

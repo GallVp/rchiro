@@ -30,10 +30,12 @@ A data frame that includes the non-baseline records and adds a column for the ba
 This function separates baseline data in a data frame by separating baseline and non-baseline records.
 }
 \examples{
-df <- data.frame(PartId = c(1, 1, 2, 2),
-                 Group = c("A", "A", "B", "B"),
-                 Time = c("Baseline", "Post", "Baseline", "Post"),
-                 Outcome = c(10, 12, 20, 22))
+df <- data.frame(
+  PartId = c(1, 1, 2, 2),
+  Group = c("A", "A", "B", "B"),
+  Time = c("Baseline", "Post", "Baseline", "Post"),
+  Outcome = c(10, 12, 20, 22)
+)
 
 result <- separate_baseline_df(df)
 print(result)

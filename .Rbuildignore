@@ -3,3 +3,4 @@
 ^.vscode$
 ^docs$
 ^_pkgdown.ym
+^\.github$
