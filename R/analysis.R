@@ -14,7 +14,7 @@
 #'
 #' @export
 is.nan.data.frame <- function(x) {
-  do.call(cbind, lapply(x, is.nan))
+  lapply(x, is.nan) |> data.frame()
 }
 
 #' Format P-Value with Standardized Precision
@@ -431,7 +431,12 @@ describe_emmeans <- function(raw_emmeans_table) {
 #'
 #' @export
 names_of_df_except <- function(df, ex) {
+
   names_all <- base::names(df)
+  if (is.null(ex) || length(ex) == 0) {
+    return(names_all)
+  }
+
   ex_which <- which(names_all %in% ex)
 
   names_all[-ex_which]
