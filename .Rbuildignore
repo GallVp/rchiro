@@ -1,5 +1,7 @@
-^.*\.Rproj$
+^\.github$
 ^\.Rproj\.user$
 ^.vscode$
-^docs$
-^_pkgdown.ym
+^.*\.Rproj$
+^_pkgdown.yml$
+^.editorconfig$
+^.lintr$

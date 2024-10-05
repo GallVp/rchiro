@@ -1,6 +1,6 @@
 {
     "editor.rulers": [
-        80
+        160
     ],
     "cSpell.words": [
         "asymp",
@@ -16,6 +16,7 @@
         "ggpubr",
         "ggqqplot",
         "ggsci",
+        "lintr",
         "lmer",
         "nejm",
         "perc",
