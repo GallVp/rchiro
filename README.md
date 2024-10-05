@@ -1,6 +1,8 @@
+[![codecov](https://codecov.io/github/GallVp/rchiro/graph/badge.svg?token=KWCBNDNL0M)](https://codecov.io/github/GallVp/rchiro)
+
 # Package `rchiro`
 
-See pkgdown [site](https://gallvp.github.io/rchiro/reference/index.html) for documentation.
+See [documentation](https://gallvp.github.io/rchiro/reference/index.html).
 
 ## Install with `devtools`
 

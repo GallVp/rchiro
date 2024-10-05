@@ -1,5 +1,5 @@
 Package: rchiro
-Title: Collection of R Functions for Statistical Analysis of Chiropractic Clinical Studies
+Title: Common R Functions for Statistical Analysis at The New Zealand College of Chiropractic
 Version: 0.0.1
 Authors@R:
     person("Usman", "Rashid", , "Usman.Rashid@nzchiro.co.nz", role = c("aut", "cre"),
