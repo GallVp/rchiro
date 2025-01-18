@@ -510,3 +510,44 @@ separate_baseline_df <- function(df,
 
   df_long
 }
+
+#' Create a Factor with Custom Levels and Labels
+#'
+#' This function transforms a vector into a factor, assigns specified levels
+#' and labels, and optionally handles missing values by explicitly assigning
+#' them a level.
+#'
+#' @param input_vector A vector to be converted into a factor.
+#' @param levels A vector of levels to be assigned to the factor.
+#' @param labels A vector of labels corresponding to the levels.
+#' @param explicit_na Logical, indicating whether missing values (NA) should
+#' be explicitly assigned to a "Missing" level. Default is TRUE.
+#'
+#' @return A factor with specified levels and labels, potentially including
+#' an explicit "Missing" level for NA values.
+#'
+#' @details
+#' This function allows for the creation of factors from a vector while
+#' specifying both levels and labels.
+#' If `explicit_na` is set to `TRUE`, missing values are explicitly
+#' assigned to a level named "Missing".
+#' The function also drops any unused levels from the factor.
+#'
+#' @examples
+#' vec <- c("low", "medium", "high", NA, "low")
+#' levels <- c("low", "medium", "high")
+#' labels <- c("Low", "Medium", "High")
+#' make_factor(vec, levels, labels)
+#'
+#' @importFrom forcats fct_na_value_to_level
+#'
+#' @export
+make_factor <- function(input_vector, levels, labels, explicit_na = TRUE) {
+  result_vector <- as.factor(input_vector)
+  result_vector <- factor(result_vector, levels = levels, labels = labels)
+
+  if (explicit_na == TRUE) {
+    result_vector <- forcats::fct_na_value_to_level(result_vector, level = "Missing")
+  }
+  result_vector <- base::droplevels(result_vector)
+}
