@@ -12,3 +12,19 @@ See [documentation](https://gallvp.github.io/rchiro/reference/index.html).
 ```R
 devtools::install_github("gallvp/rchiro")
 ```
+
+## Developer Notes
+
+1. Check package
+
+```bash
+RScript -e 'devtools::check()'
+```
+
+2. Lint code
+
+```bash
+RScript -e 'lintr::lint_package()'
+```
+
+3. Create a PR to the `main` branch
