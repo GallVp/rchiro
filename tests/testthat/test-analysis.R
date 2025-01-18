@@ -236,3 +236,44 @@ test_that("separate_baseline_df handles cases with multiple post-baseline observ
 
   expect_equal(result, expected_result)
 })
+
+# make_factor ---------------------------------------------------------------------------------------------------------
+test_that("make_factor creates factor with correct levels and labels", {
+  vec <- c("low", "medium", "high", "low")
+  levels <- c("low", "medium", "high")
+  labels <- c("Low", "Medium", "High")
+  result <- make_factor(vec, levels, labels)
+
+  expect_equal(levels(result), labels)
+  expect_equal(as.character(result), c("Low", "Medium", "High", "Low"))
+})
+
+test_that("make_factor handles NA values with explicit_na = TRUE", {
+  vec <- c("low", "medium", "high", NA, "low")
+  levels <- c("low", "medium", "high")
+  labels <- c("Low", "Medium", "High")
+  result <- make_factor(vec, levels, labels, explicit_na = TRUE)
+
+  expect_equal(levels(result), c("Low", "Medium", "High", "Missing"))
+  expect_equal(as.character(result), c("Low", "Medium", "High", "Missing", "Low"))
+})
+
+test_that("make_factor handles NA values with explicit_na = FALSE", {
+  vec <- c("low", "medium", "high", NA, "low")
+  levels <- c("low", "medium", "high")
+  labels <- c("Low", "Medium", "High")
+  result <- make_factor(vec, levels, labels, explicit_na = FALSE)
+
+  expect_equal(levels(result), labels)
+  expect_equal(as.character(result), c("Low", "Medium", "High", NA, "Low"))
+})
+
+test_that("make_factor drops unused levels", {
+  vec <- c("low", "medium", "low")
+  levels <- c("low", "medium", "high")
+  labels <- c("Low", "Medium", "High")
+  result <- make_factor(vec, levels, labels)
+
+  expect_equal(levels(result), c("Low", "Medium"))
+  expect_equal(as.character(result), c("Low", "Medium", "Low"))
+})
