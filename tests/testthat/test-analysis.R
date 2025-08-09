@@ -1,3 +1,26 @@
+# load_libraries -----------------------------------------------------------------------------------------------------
+test_that("load_libraries loads packages, writes bib, and returns version table", {
+  pkgs <- c("stats", "utils")
+  # Remove bib file if exists
+  if (file.exists("bibliography.bib")) file.remove("bibliography.bib")
+  res <- load_libraries(pkgs)
+  expect_true(all(pkgs %in% res$Package))
+  expect_true(file.exists("bibliography.bib"))
+  bib_content <- readLines("bibliography.bib")
+  expect_true(any(grepl("@Manual{stats", bib_content, fixed = TRUE)))
+  expect_true(any(grepl("@Manual{utils", bib_content, fixed = TRUE)))
+  expect_true(any(grepl("@Manual{base", bib_content, fixed = TRUE)))
+  expect_true(any(grepl("R version", res$Version[res$Package == "R"])))
+  # Clean up
+  file.remove("bibliography.bib")
+})
+
+test_that("load_libraries errors on bad input", {
+  expect_error(load_libraries(1:3), "character vector")
+  expect_error(load_libraries(character(0)), "must not be empty")
+  expect_error(load_libraries(NA_character_), "must not contain NA values")
+  expect_error(load_libraries(c("stats", "")), "must not contain empty strings")
+})
 # is.nan.data.frame ---------------------------------------------------------------------------------------------------
 test_that("is.nan.data.frame works correctly", {
   # Create a data frame with numeric values, including NaN
