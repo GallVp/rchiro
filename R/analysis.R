@@ -227,8 +227,6 @@ diag_plot_lmer <- function(model) {
       ncol = 1,
       nrow = 2
     )
-
-  return(figure)
 }
 
 #' Standardize a Contrast Table
@@ -287,20 +285,40 @@ describe_contrasts <- function(raw_contrasts_table) {
     dplyr::rowwise() |>
     dplyr::mutate(sig_digits = ceiling(log10(1 / SE))) |>
     dplyr::rowwise() |>
-    dplyr::mutate(Difference = paste0(
-      round(estimate, sig_digits),
-      "±",
-      round(SE, sig_digits),
-      " [",
-      round(base::get(ci_names[1]), sig_digits),
-      ", ",
-      round(base::get(ci_names[2]), sig_digits), "]"
-    ), Test = paste0(
-      stat_names[2],
-      "[", round(df, 1), "]", "=",
-      round(base::get(stat_names[1]), 3), ", ",
-      rchiro::describe_p_value(p.value)
-    ))
+    dplyr::mutate(
+      SMD = if (is.na(df)) {
+        NA
+      } else {
+        round(estimate / (SE * sqrt(df)), 2)
+      },
+      SMD_str = if (is.na(SMD)) {
+        ""
+      } else {
+        paste0(", ", SMD)
+      },
+      Difference = paste0(
+        round(estimate, sig_digits),
+        "±",
+        round(SE, sig_digits),
+        " [",
+        round(base::get(ci_names[1]), sig_digits),
+        ", ",
+        round(base::get(ci_names[2]), sig_digits), "]",
+        SMD_str
+      ),
+      Test = paste0(
+        stat_names[2],
+        "[", round(df, 1), "]", "=",
+        round(base::get(stat_names[1]), 3), ", ",
+        rchiro::describe_p_value(p.value)
+      )
+    )
+
+  smd_header_text <- if (is.na(a_table[1, "SMD"])) {
+    ""
+  } else {
+    ", SMD"
+  }
   a_table$estimate <- NULL
   a_table$SE <- NULL
   a_table$df <- NULL
@@ -312,10 +330,13 @@ describe_contrasts <- function(raw_contrasts_table) {
   a_table$t.ratio <- NULL
   a_table$z.ratio <- NULL
   a_table$p.value <- NULL
+  a_table$SMD <- NULL
+  a_table$SMD_str <- NULL
+
   a_table <- as.data.frame(a_table)
 
   a_table_names <- names(a_table)
-  a_table_names[length(a_table_names) - 1] <- "Difference±SE [95% CI]"
+  a_table_names[length(a_table_names) - 1] <- paste0("Difference±SE [95% CI]", smd_header_text)
   a_table_names[length(a_table_names)] <- paste0(stat_names[2], "[df], p-value")
   a_table_names[1] <- "Contrast"
   names(a_table) <- a_table_names
@@ -378,6 +399,16 @@ describe_emmeans <- function(raw_emmeans_table) {
     dplyr::mutate(sig_digits = ceiling(log10(1 / SE))) |>
     dplyr::rowwise() |>
     dplyr::mutate(
+      SMD = if (is.na(df)) {
+        NA
+      } else {
+        round(emmean / (SE * sqrt(df)), 2)
+      },
+      SMD_str = if (is.na(SMD)) {
+        ""
+      } else {
+        paste0(", ", SMD)
+      },
       Estimate = paste0(
         round(emmean, sig_digits),
         "±",
@@ -385,7 +416,8 @@ describe_emmeans <- function(raw_emmeans_table) {
         " [",
         round(base::get(ci_names[1]), sig_digits),
         ", ",
-        round(base::get(ci_names[2]), sig_digits), "]"
+        round(base::get(ci_names[2]), sig_digits), "]",
+        SMD_str
       ),
       Test = paste0(
         stat_names[2], "[",
@@ -395,6 +427,11 @@ describe_emmeans <- function(raw_emmeans_table) {
       )
     )
 
+  smd_header_text <- if (is.na(a_table[1, "SMD"])) {
+    ""
+  } else {
+    ", SMD"
+  }
   a_table$emmean <- NULL
   a_table$SE <- NULL
   a_table$df <- NULL
@@ -406,10 +443,12 @@ describe_emmeans <- function(raw_emmeans_table) {
   a_table$t.ratio <- NULL
   a_table$z.ratio <- NULL
   a_table$p.value <- NULL
+  a_table$SMD <- NULL
+  a_table$SMD_str <- NULL
   a_table <- as.data.frame(a_table)
 
   a_table_names <- names(a_table)
-  a_table_names[length(a_table_names) - 1] <- "Estimate±SE [95% CI]"
+  a_table_names[length(a_table_names) - 1] <- paste0("Estimate±SE [95% CI]", smd_header_text)
   a_table_names[length(a_table_names)] <- paste0(stat_names[2], "[df], p-value")
   names(a_table) <- a_table_names
 
@@ -550,4 +589,54 @@ make_factor <- function(input_vector, levels, labels, explicit_na = TRUE) {
     result_vector <- forcats::fct_na_value_to_level(result_vector, level = "Missing")
   }
   result_vector <- base::droplevels(result_vector)
+}
+
+
+#' Load Libraries, Write Bibliography, and Return Version Table
+#'
+#' This function loads a list of R packages, writes their citations to a BibTeX file, and returns a data frame of package versions.
+#'
+#' @param library.list A character vector of package names to load.
+#' @return A data frame with package names and versions (including base R).
+#' @details
+#' - Loads each package in `library_list` using `library()`.
+#' - Writes BibTeX citations for each package (and base R) to `bibliography.bib` in the working directory.
+#' - Returns a data frame with package names and versions, including base R.
+#' @examples
+#' load_libraries(c("stats", "utils"))
+#' @export
+load_libraries <- function(library_list) {
+  # Argument validation
+  if (missing(library_list)) stop("library_list argument is required.")
+  if (!is.character(library_list)) stop("library_list must be a character vector of package names.")
+  if (length(library_list) == 0) stop("library_list must not be empty.")
+  if (anyNA(library_list)) stop("library_list must not contain NA values.")
+  if (any(!nzchar(library_list))) stop("library_list must not contain empty strings.")
+
+  invisible(lapply(library_list, function(pkg) {
+    suppressPackageStartupMessages(
+      library(pkg, character.only = TRUE)
+    )
+    NULL
+  }))
+
+  bib_list <- lapply(c(library_list, "base"), function(x) {
+    bib <- toBibtex(citation(x))
+    bib_with_key <- sub("@(\\w+)\\{", paste0("@\\1{", x), bib)
+    bib_with_key
+  })
+  write(unlist(bib_list), "bibliography.bib")
+
+  version_vec <- vapply(library_list, function(x) {
+    tryCatch({
+      paste0(as.character(packageVersion(x)), " [@", x, "]")
+    }, error = function(e) NA_character_)
+  }, character(1))
+
+  library_versions_df <- rbind(
+    data.frame(Package = "R", Version = paste0(R.version.string, " [@base]")),
+    data.frame(Package = library_list, Version = version_vec, stringsAsFactors = FALSE)
+  )
+  rownames(library_versions_df) <- NULL
+  library_versions_df
 }
