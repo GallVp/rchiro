@@ -125,10 +125,7 @@ confint.rlmerMod <- function(mod, parm, level = 0.95) {
   se <- sqrt(Matrix::diag(stats::vcov(mod)))
   z <- stats::qnorm((1 + level) / 2)
   c_tab <- cbind(beta - z * se, beta + z * se)
-  colnames(c_tab) <- complmrob:::format.perc(
-    c((1 - level) / 2, (1 + level) / 2),
-    digits = 3
-  )
+  colnames(c_tab) <- scales::label_percent(accuracy = 0.1)(c((1 - level) / 2, (1 + level) / 2))
   return(c_tab[parm, ])
 }
 
